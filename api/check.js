@@ -3,28 +3,21 @@ export default async function handler(req, res) {
   const { secretWord, secretCategory, question } = req.body;
   const API_KEY = process.env.ANTHROPIC_API_KEY;
 
-  // 1. 유기적인 답변(Organic Answers)과 STT 오류 보정을 동시에 지시
-  const systemPrompt = `You are a highly intelligent and conversational host for a '20 Questions' game.
-
+  // AI가 헛소리를 덧붙이지 못하도록 극도로 제한된 프롬프트
+  const systemPrompt = `You are a highly intelligent 20 Questions game host. 
 CRITICAL RULES:
-1. You MUST return ONLY valid JSON. Do not include any introductory or explanatory text.
-2. The user's input comes from STT. Infer the correct intent if there are phonetic errors (e.g., "is it double" -> "is it edible", "울에 살아" -> "물에 살아").
-3. Provide ORGANIC, CONTEXTUAL, and NATURAL answers. Do NOT just say "Yes" or "No". Add helpful, specific context based on the secret word.
-   - Example 1: (Word: Elephant, Q: "Can I see this one?") -> "Yes, but usually you have to go to a zoo or travel to Africa or Asia to see it."
-   - Example 2: (Word: Sun, Q: "do we usually eat?") -> "No, you definitely cannot eat this! It is a giant star in the sky."
-   - Example 3: (Word: Kimchi, Q: "is it double / edible?") -> "Yes, it is very edible and people in Korea eat it almost every day."`;
+1. Return ONLY valid JSON. No markdown formatting like \`\`\`json.
+2. User input is from STT. Autocorrect phonetic errors quietly (e.g., "is it double" -> "edible", "울에 살아" -> "물에 살아").
+3. Give organic, natural 1-2 sentence answers in the JSON.
+4. DO NOT use line breaks or unescaped quotes inside the answer string.`;
 
   const userPrompt = `Secret word: "${secretWord}" (category: ${secretCategory})
-User's Raw STT input: "${question}"
+User STT input: "${question}"
 
-Format your response EXACTLY like this JSON object:
-If it's a direct correct guess:
-{"type":"guess","correct":true,"answer":"Correct! It is ${secretWord}!"}
-If it's an incorrect guess:
-{"type":"guess","correct":false,"answer":"Not quite! Keep guessing."}
-If it's a yes/no question:
-{"type":"question","answer":"<Your natural, organic, contextual 1-2 sentence answer here>"}
-`;
+Respond EXACTLY in this JSON format:
+{"type":"question","answer":"Yes, you can usually see them in a zoo."}
+Or if it is a direct guess:
+{"type":"guess","correct":true,"answer":"Correct! It is ${secretWord}!"}`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -35,22 +28,26 @@ If it's a yes/no question:
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20240620',
-        max_tokens: 250, // 유기적인 긴 답변을 위해 토큰 수 증가
+        // ⚡ Vercel 10초 타임아웃을 막기 위해 가장 빠른 Haiku 모델 사용
+        model: 'claude-3-haiku-20240307', 
+        max_tokens: 150,
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }]
       })
     });
 
-    if (!response.ok) throw new Error(`Anthropic API Error: ${response.status}`);
+    if (!response.ok) {
+      const errData = await response.json();
+      throw new Error(errData.error?.message || `Anthropic API Error: ${response.status}`);
+    }
+
     const data = await response.json();
-    const rawText = data.content[0].text;
+    let rawText = data.content[0].text.trim();
     
-    // 2. 에러 방지용 무적 파싱 로직 (AI가 쓸데없는 말을 덧붙여도 JSON만 정확히 추출)
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('AI returned invalid JSON format');
-    
-    const parsed = JSON.parse(jsonMatch[0]);
+    // AI가 혹시라도 마크다운(```json)을 붙였을 경우 강제로 제거
+    rawText = rawText.replace(/^```json/i, '').replace(/```$/, '').trim();
+
+    const parsed = JSON.parse(rawText);
     res.status(200).json(parsed);
 
   } catch (error) {
