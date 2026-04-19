@@ -3,33 +3,29 @@ export default async function handler(req, res) {
   const { secretWord, secretCategory, question } = req.body;
   const API_KEY = process.env.ANTHROPIC_API_KEY;
 
-  const systemPrompt = `You are a highly intelligent 20 Questions game host. 
-CRITICAL RULES:
-1. Return ONLY valid JSON. No markdown formatting like \`\`\`json.
-2. User input is from STT. Autocorrect phonetic errors quietly (e.g., "is it double" -> "edible", "울에 살아" -> "물에 살아").
-3. Give organic, natural 1-2 sentence answers in the JSON. Add helpful, specific context based on the secret word instead of just Yes/No.
-4. DO NOT use line breaks or unescaped quotes inside the answer string.`;
+  // 🛡️ API 키 사전 검사 로직 추가
+  if (!API_KEY || API_KEY.trim() === '') {
+    return res.status(401).json({ error: { message: "Vercel 환경 변수에 ANTHROPIC_API_KEY가 설정되지 않았습니다." }});
+  }
 
-  const userPrompt = `Secret word: "${secretWord}" (category: ${secretCategory})
-User STT input: "${question}"
+  const systemPrompt = `You are a 20 Questions host. Return ONLY valid JSON. 
+Autocorrect STT errors (e.g. "is it double" -> "edible"). 
+Give natural, organic 1-2 sentence answers based on context. No line breaks.`;
 
-Respond EXACTLY in this JSON format:
-{"type":"question","answer":"Yes, you can usually see them in a zoo."}
-Or if it is a direct correct guess:
-{"type":"guess","correct":true,"answer":"Correct! It is ${secretWord}!"}
-Or incorrect guess:
-{"type":"guess","correct":false,"answer":"Not quite! Keep guessing."}`;
+  const userPrompt = `Word: "${secretWord}"
+User: "${question}"
+JSON Format: {"type":"question","answer":"..."}`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
+        'x-api-key': API_KEY.trim(), // 빈칸 강제 제거
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307', // ⚡ 초고속 모델 (타임아웃 방지)
+        model: 'claude-3-haiku-20240307',
         max_tokens: 150,
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }]
@@ -37,21 +33,17 @@ Or incorrect guess:
     });
 
     if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error?.message || `Anthropic API Error: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        return res.status(response.status).json({ error: errorData.error?.message || `API Status: ${response.status}` });
     }
 
     const data = await response.json();
-    let rawText = data.content[0].text.trim();
+    let text = data.content[0].text.trim();
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error("AI 응답 형식이 올바르지 않습니다.");
     
-    // 에러 방지 무적 파싱 로직
-    rawText = rawText.replace(/^```json/i, '').replace(/```$/, '').trim();
-    const parsed = JSON.parse(rawText);
-    
-    res.status(200).json(parsed);
-
+    res.status(200).json(JSON.parse(match[0]));
   } catch (error) {
-    console.error('API Check Error:', error);
     res.status(500).json({ error: error.message });
   }
 }
