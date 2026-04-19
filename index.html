@@ -19,68 +19,35 @@
   }
   .app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
 
-  /* ── START SCREEN ── */
-  #start-screen {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-height: 100vh; padding: 32px 22px; gap: 22px; position: relative;
-  }
-  .glow-orb {
-    position: absolute; top: -80px; left: 50%; transform: translateX(-50%);
-    width: 360px; height: 360px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(0,122,255,0.13) 0%, transparent 70%);
-    pointer-events: none;
-  }
+  /* START SCREEN */
+  #start-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 32px 22px; gap: 22px; position: relative; }
+  .glow-orb { position: absolute; top: -80px; left: 50%; transform: translateX(-50%); width: 360px; height: 360px; border-radius: 50%; background: radial-gradient(circle, rgba(0,122,255,0.13) 0%, transparent 70%); pointer-events: none; }
   .main-icon { font-size: 72px; margin-bottom: 8px; filter: drop-shadow(0 6px 20px rgba(0,122,255,0.35)); }
   .main-title { font-size: 40px; font-weight: 900; color: var(--navy); letter-spacing: -1px; margin-bottom: 6px; }
   .main-sub { font-size: 15px; color: var(--gray); font-weight: 600; }
-  .lang-card {
-    background: var(--card); border-radius: 28px; padding: 26px 22px;
-    width: 100%; max-width: 360px; box-shadow: 0 8px 40px rgba(0,0,0,0.08); border: 1px solid var(--border);
-  }
+  .lang-card { background: var(--card); border-radius: 28px; padding: 26px 22px; width: 100%; max-width: 360px; box-shadow: 0 8px 40px rgba(0,0,0,0.08); border: 1px solid var(--border); }
   .lang-label { font-size: 12px; font-weight: 800; color: var(--gray); text-align: center; margin-bottom: 12px; letter-spacing: 0.5px; }
   .lang-btns { display: flex; gap: 10px; margin-bottom: 20px; }
-  .lang-btn {
-    flex: 1; padding: 14px 0; border-radius: 14px; border: 1.5px solid var(--border);
-    background: #F8F8FA; font-size: 14px; font-weight: 800; cursor: pointer; color: var(--gray);
-    transition: all 0.15s;
-  }
+  .lang-btn { flex: 1; padding: 14px 0; border-radius: 14px; border: 1.5px solid var(--border); background: #F8F8FA; font-size: 14px; font-weight: 800; cursor: pointer; color: var(--gray); transition: all 0.15s; }
   .lang-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); box-shadow: 0 4px 16px rgba(0,122,255,0.3); }
-  .btn-primary {
-    width: 100%; height: 58px; border-radius: 18px; background: var(--navy);
-    color: #fff; border: none; font-size: 17px; font-weight: 900;
-    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
-    box-shadow: 0 8px 24px rgba(0,45,94,0.28); transition: transform 0.1s, opacity 0.1s;
-  }
+  .btn-primary { width: 100%; height: 58px; border-radius: 18px; background: var(--navy); color: #fff; border: none; font-size: 17px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,45,94,0.28); transition: transform 0.1s, opacity 0.1s; }
   .btn-primary:active { transform: scale(0.97); opacity: 0.9; }
-  .info-box {
-    background: rgba(255,255,255,0.8); border-radius: 20px; padding: 18px 20px;
-    width: 100%; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px;
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  }
+  .info-box { background: rgba(255,255,255,0.8); border-radius: 20px; padding: 18px 20px; width: 100%; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
   .info-row { display: flex; gap: 10px; align-items: center; font-size: 14px; font-weight: 600; color: #3A3A3C; }
 
-  /* ── TOP BAR ── */
-  #top-bar {
-    display: none; align-items: center; justify-content: space-between;
-    padding: 13px 16px; background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-    border-bottom: 0.5px solid rgba(229,229,234,0.5);
-    position: sticky; top: 0; z-index: 100;
-  }
+  /* TOP BAR */
+  #top-bar { display: none; align-items: center; justify-content: space-between; padding: 13px 16px; background: rgba(255,255,255,0.85); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-bottom: 0.5px solid rgba(229,229,234,0.5); position: sticky; top: 0; z-index: 100; }
   .top-btn-red { padding: 8px 13px; border-radius: 10px; border: none; background: var(--red); color: #fff; font-size: 13px; font-weight: 800; cursor: pointer; }
   .top-btn-blue { padding: 8px 13px; border-radius: 10px; border: none; background: var(--blue); color: #fff; font-size: 13px; font-weight: 800; cursor: pointer; }
   #counter { font-size: 26px; font-weight: 900; line-height: 1; text-align: center; }
   #counter-label { font-size: 9px; color: var(--gray); font-weight: 700; letter-spacing: 0.5px; text-align: center; }
 
-  /* ── PHASES ── */
+  /* PHASES */
   .phase { display: none; }
   .phase.active { display: block; }
-  .center-box {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-height: 85vh; padding: 32px; gap: 20px;
-  }
+  .center-box { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 85vh; padding: 32px; gap: 20px; }
 
-  /* NEW CASCADE DIAL */
+  /* PERFECT CENTER JACKPOT DIAL */
   .dial-outer {
     width: 260px; height: 300px; border-radius: 32px;
     background: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.7);
@@ -88,45 +55,28 @@
     overflow: hidden; position: relative;
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   }
-  .dial-overlay {
-    position: absolute; inset: 0; pointer-events: none; z-index: 5;
-    background: linear-gradient(to bottom, var(--bg) 0%, transparent 25%, transparent 75%, var(--bg) 100%);
-  }
-  #cascade-container {
-    width: 100%; height: 100%; position: absolute; top: 0; left: 0;
-    transition: opacity 0.8s ease;
-  }
+  .dial-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 5; background: linear-gradient(to bottom, var(--bg) 0%, transparent 25%, transparent 75%, var(--bg) 100%); }
+  #cascade-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; transition: opacity 0.8s ease; }
+  
+  /* 단어가 정가운데서만 떨어지도록 수정 */
   .cascade-word {
-    position: absolute; font-size: 22px; font-weight: 800;
-    color: var(--navy); white-space: nowrap; opacity: 0;
-    animation: drop linear infinite;
+    position: absolute; width: 100%; text-align: center; left: 0; 
+    font-size: 32px; font-weight: 900; color: var(--navy); opacity: 0;
+    animation: drop linear infinite; text-shadow: 0 4px 12px rgba(0,122,255,0.2);
   }
   @keyframes drop {
-    0% { top: -15%; opacity: 0; filter: blur(5px) scale(0.85); color: rgba(0,45,94,0.4); }
-    25% { opacity: 0.9; filter: blur(0px) scale(1); color: var(--blue); }
-    75% { opacity: 0.9; filter: blur(0px) scale(1); color: var(--blue); }
-    100% { top: 115%; opacity: 0; filter: blur(5px) scale(0.85); color: rgba(0,45,94,0.4); }
+    0% { top: -20%; opacity: 0; filter: blur(5px) scale(0.8); }
+    30% { opacity: 1; filter: blur(0px) scale(1.1); color: var(--blue); }
+    70% { opacity: 1; filter: blur(0px) scale(1.1); color: var(--blue); }
+    100% { top: 120%; opacity: 0; filter: blur(5px) scale(0.8); }
   }
-  .dial-final {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
-    font-size: 72px; font-weight: 900; color: var(--navy); letter-spacing: 2px;
-    opacity: 0; z-index: 10; transition: all 0.9s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    text-shadow: 0 10px 30px rgba(0,122,255,0.25);
-  }
+  
+  .dial-final { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); font-size: 72px; font-weight: 900; color: var(--navy); letter-spacing: 2px; opacity: 0; z-index: 10; transition: all 0.9s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-shadow: 0 10px 30px rgba(0,122,255,0.25); }
   .dial-final.active { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
   /* PLAYING */
-  #answer-reveal {
-    display: none; background: #FFF9E6; border: 1.5px solid var(--yellow);
-    border-radius: 14px; margin: 10px 14px 0; padding: 10px 16px;
-    align-items: center; gap: 10px;
-  }
-  .mystery-card {
-    margin: 16px 14px; background: rgba(255,255,255,0.85); border-radius: 26px;
-    padding: 22px 20px; text-align: center;
-    box-shadow: 0 6px 28px rgba(0,0,0,0.04); border: 1px solid var(--border);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  }
+  #answer-reveal { display: none; background: #FFF9E6; border: 1.5px solid var(--yellow); border-radius: 14px; margin: 10px 14px 0; padding: 10px 16px; align-items: center; gap: 10px; }
+  .mystery-card { margin: 16px 14px; background: rgba(255,255,255,0.85); border-radius: 26px; padding: 22px 20px; text-align: center; box-shadow: 0 6px 28px rgba(0,0,0,0.04); border: 1px solid var(--border); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
   .mystery-word { font-size: 50px; font-weight: 900; color: var(--navy); letter-spacing: 18px; text-shadow: 0 4px 24px rgba(0,45,94,0.12); }
   .mystery-sub { font-size: 13px; color: var(--gray); font-weight: 700; margin-top: 6px; }
 
@@ -146,12 +96,7 @@
   .replay-btn.playing { background: #FFE5E5; border-color: var(--red); }
 
   /* Input Area */
-  #input-area {
-    position: sticky; bottom: 0; background: rgba(242,242,247,0.85);
-    backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
-    border-top: 0.5px solid rgba(229,229,234,0.6);
-    padding: 12px 14px 28px; z-index: 100;
-  }
+  #input-area { position: sticky; bottom: 0; background: rgba(242,242,247,0.85); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px); border-top: 0.5px solid rgba(229,229,234,0.6); padding: 12px 14px 28px; z-index: 100; }
   .mic-badge { border-radius: 10px; padding: 7px 12px; font-size: 12px; font-weight: 700; text-align: center; margin-bottom: 8px; }
   .speak-bar { background: #E3F0FF; border-radius: 12px; padding: 8px 14px; font-size: 13px; font-weight: 800; color: var(--blue); display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   .stop-speak-btn { margin-left: auto; background: var(--blue); color: #fff; border: none; border-radius: 8px; padding: 4px 10px; font-size: 12px; font-weight: 800; cursor: pointer; }
@@ -309,9 +254,6 @@
 </div>
 
 </div><script>
-/* ══════════════════════════════════════════
-   STATE & URLS
-══════════════════════════════════════════ */
 const API_BASE_URL = '/api'; 
 
 let lang = 'en';
@@ -378,9 +320,7 @@ function applyStartLang() {
   document.getElementById('info4').textContent = t('info4');
 }
 
-/* ══════════════════════════════════════════
-   TTS & STT
-══════════════════════════════════════════ */
+/* TTS & STT */
 function getEnglishVoice() {
   const voices = speechSynthesis.getVoices();
   const preferred = ['Samantha','Karen','Moira','Google US English','Alex','Victoria','Daniel','Fiona'];
@@ -486,7 +426,6 @@ function startListening() {
       document.getElementById('live-box').style.display = 'none';
       document.getElementById('live-txt').textContent = '';
       
-      // ✅ 자동 전송 방지 및 입력창 포커싱 처리
       if (liveTxt) {
         const inputEl = document.getElementById('text-input');
         inputEl.value = liveTxt;
@@ -503,7 +442,7 @@ function stopListening() { if (recognition) { try { recognition.stop(); } catch(
 function resetMicBtn() { document.getElementById('mic-btn').classList.remove('listening'); document.getElementById('mic-btn-txt').textContent = t('micBtnTxt'); }
 
 /* ══════════════════════════════════════════
-   GAME FLOW & ANIMATIONS
+   GAME FLOW & ANIMATIONS (다이얼 시간/모션 수정)
 ══════════════════════════════════════════ */
 function startCascadeDial() {
   const container = document.getElementById('cascade-container');
@@ -512,15 +451,15 @@ function startCascadeDial() {
 
   const words = ['Ocean', 'Tiger', 'Galaxy', 'Robot', 'Apple', 'Mountain', 'Diamond', 'Castle', 'Piano', 'Dragon', 'Forest', 'Rocket', 'Shadow', 'Eclipse'];
   
+  // 정가운데 슬롯머신처럼 빠르게 떨어지도록 간격 및 속도 조정
   cascadeInterval = setInterval(() => {
     const el = document.createElement('div');
     el.className = 'cascade-word';
     el.textContent = words[Math.floor(Math.random() * words.length)];
-    el.style.left = (15 + Math.random() * 70) + '%';
-    el.style.animationDuration = (0.9 + Math.random() * 1.5) + 's';
+    el.style.animationDuration = (0.35 + Math.random() * 0.25) + 's';
     container.appendChild(el);
-    setTimeout(() => { if (container.contains(el)) el.remove(); }, 2500);
-  }, 120);
+    setTimeout(() => { if (container.contains(el)) el.remove(); }, 800);
+  }, 60);
 }
 
 function updateCounter() {
@@ -534,47 +473,48 @@ async function startGame() {
   document.getElementById('start-screen').style.display = 'none';
   showPhase('dial'); document.getElementById('top-bar').style.display = 'none';
   document.getElementById('dial-label').textContent = t('dialLabel'); 
+  
   startCascadeDial();
 
+  // 1. 다이얼 애니메이션을 3.5초 동안 길게 보여줍니다.
   setTimeout(async () => {
-    // 다이얼 페이드아웃 및 '???' 활성화
     clearInterval(cascadeInterval);
     document.getElementById('cascade-container').style.opacity = '0';
     document.getElementById('dial-final').classList.add('active');
 
-    setTimeout(() => {
+    // 2. '???' 상태로 1.5초 대기 후 백엔드 통신(생각중) 시작
+    setTimeout(async () => {
       showPhase('thinking');
       document.getElementById('thinking-txt').textContent = t('thinkingTxt');
       document.getElementById('thinking-sub').textContent = t('thinkingSub');
 
       let d = 0;
       dotsTimer = setInterval(() => { d = (d + 1) % 4; document.getElementById('dots').textContent = '.'.repeat(d + 1); }, 400);
-    }, 1000);
 
-    // AI 통신
-    try {
-      const res = await fetch(`${API_BASE_URL}/get-word`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ lang })
-      });
-      if (!res.ok) throw new Error('API Error');
-      const wordData = await res.json();
-      secretWord = wordData.word; secretCategory = wordData.category;
-    } catch(e) {
-      secretWord = lang === 'ko' ? '고양이' : 'elephant';
-      secretCategory = lang === 'ko' ? '동물' : 'animal';
-    }
+      try {
+        const res = await fetch(`${API_BASE_URL}/get-word`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lang })
+        });
+        if (!res.ok) throw new Error('API Error');
+        const wordData = await res.json();
+        secretWord = wordData.word; secretCategory = wordData.category;
+      } catch(e) {
+        secretWord = lang === 'ko' ? '고양이' : 'elephant';
+        secretCategory = lang === 'ko' ? '동물' : 'animal';
+      }
 
-    clearInterval(dotsTimer);
-    document.getElementById('thinking-box').innerHTML = `
-      <div style="font-size:72px;margin-bottom:12px">✅</div>
-      <h2 style="font-size:26px;font-weight:900;color:var(--navy)">${t('wordReady')}</h2>
-      <p style="color:var(--green);font-weight:700;font-size:16px;margin-top:8px">${t('wordReadySub')}</p>
-    `;
-    speakText('Word ready! Start asking your questions!', 1.0);
+      clearInterval(dotsTimer);
+      document.getElementById('thinking-box').innerHTML = `
+        <div style="font-size:72px;margin-bottom:12px">✅</div>
+        <h2 style="font-size:26px;font-weight:900;color:var(--navy)">${t('wordReady')}</h2>
+        <p style="color:var(--green);font-weight:700;font-size:16px;margin-top:8px">${t('wordReadySub')}</p>
+      `;
+      speakText('Word ready! Start asking your questions!', 1.0);
 
-    setTimeout(() => { showPlayPhase(); }, 2500);
-  }, 3500);
+      setTimeout(() => { showPlayPhase(); }, 2500);
+    }, 1500); 
+  }, 3500); 
 }
 
 function showPlayPhase() {
@@ -603,7 +543,6 @@ async function handleQuestion(question) {
 
   document.getElementById('analyzing-bar').style.display = 'block'; setInputEnabled(false);
 
-  // ✅ 무한 로딩 버그 방지를 위한 완벽한 에러 핸들링
   try {
     const res = await fetch(`${API_BASE_URL}/check`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -625,7 +564,7 @@ async function handleQuestion(question) {
   } catch(e) {
     qaHistory[entryIdx].answer = '⚠️ 연결에 실패했습니다. 다시 시도해주세요.';
     qaHistory[entryIdx].error = true;
-    questionCount--; // 에러 시 카운트 복구
+    questionCount--; 
     updateCounter();
   } finally {
     document.getElementById('analyzing-bar').style.display = 'none'; 
@@ -637,9 +576,7 @@ async function handleQuestion(question) {
 
 function setInputEnabled(enabled) { document.getElementById('text-input').disabled = !enabled; document.getElementById('send-btn').disabled = !enabled; }
 
-/* ══════════════════════════════════════════
-   UI RENDER HELPERS
-══════════════════════════════════════════ */
+/* RENDER HELPERS */
 function renderQA() {
   const panel = document.getElementById('qa-panel'); const list = document.getElementById('qa-list');
   panel.style.display = qaHistory.length > 0 ? 'block' : 'none';
