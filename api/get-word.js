@@ -1,6 +1,5 @@
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
-
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
   const { lang } = req.body;
   const API_KEY = process.env.ANTHROPIC_API_KEY;
 
@@ -19,15 +18,15 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-3-5-sonnet-20240620',
-        max_tokens: 1000,
+        max_tokens: 100,
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }]
       })
     });
 
-    if (!response.ok) throw new Error('API Error');
+    if (!response.ok) throw new Error(`Anthropic API Error: ${response.status}`);
     const data = await response.json();
-    const rawText = data.content.map(b => b.type === 'text' ? b.text : '').join('');
+    const rawText = data.content[0].text;
     const parsed = JSON.parse(rawText.replace(/```json|```/g, '').trim());
     
     res.status(200).json(parsed);
