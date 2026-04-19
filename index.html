@@ -3,621 +3,182 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>20 Questions / 스무고개</title>
+<title>20 Questions AI</title>
 <style>
-  :root {
-    --navy: #002D5E; --blue: #007AFF; --red: #FF3B30;
-    --green: #34C759; --orange: #FF9500; --yellow: #FFD60A;
-    --bg: #F2F2F7; --card: #FFFFFF; --border: #E5E5EA;
-    --gray: #8E8E93; --text: #1C1C1E;
-  }
+  :root { --navy: #002D5E; --blue: #007AFF; --red: #FF3B30; --green: #34C759; --bg: #F2F2F7; --border: #E5E5EA; --gray: #8E8E93; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", sans-serif;
-    background: var(--bg); color: var(--text);
-    -webkit-font-smoothing: antialiased; min-height: 100vh;
-  }
+  body { font-family: -apple-system, sans-serif; background: var(--bg); color: #1C1C1E; }
   .app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+  
+  /* 잭팟 다이얼 */
+  .dial-outer { width: 260px; height: 300px; border-radius: 32px; background: #fff; margin: 20px auto; overflow: hidden; position: relative; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+  #cascade-container { width: 100%; height: 100%; position: absolute; }
+  .cascade-word { position: absolute; width: 100%; text-align: center; font-size: 28px; font-weight: 900; color: var(--blue); animation: drop 0.5s linear infinite; }
+  @keyframes drop { 0% { top: -20%; opacity: 0; } 50% { opacity: 1; } 100% { top: 120%; opacity: 0; } }
+  .dial-final { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 60px; font-weight: 900; opacity: 0; transition: 0.5s; }
+  .dial-final.active { opacity: 1; }
 
-  /* START SCREEN */
-  #start-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 32px 22px; gap: 22px; position: relative; }
-  .glow-orb { position: absolute; top: -80px; left: 50%; transform: translateX(-50%); width: 360px; height: 360px; border-radius: 50%; background: radial-gradient(circle, rgba(0,122,255,0.13) 0%, transparent 70%); pointer-events: none; }
-  .main-icon { font-size: 72px; margin-bottom: 8px; filter: drop-shadow(0 6px 20px rgba(0,122,255,0.35)); }
-  .main-title { font-size: 40px; font-weight: 900; color: var(--navy); letter-spacing: -1px; margin-bottom: 6px; }
-  .main-sub { font-size: 15px; color: var(--gray); font-weight: 600; }
-  .lang-card { background: var(--card); border-radius: 28px; padding: 26px 22px; width: 100%; max-width: 360px; box-shadow: 0 8px 40px rgba(0,0,0,0.08); border: 1px solid var(--border); }
-  .lang-label { font-size: 12px; font-weight: 800; color: var(--gray); text-align: center; margin-bottom: 12px; letter-spacing: 0.5px; }
-  .lang-btns { display: flex; gap: 10px; margin-bottom: 20px; }
-  .lang-btn { flex: 1; padding: 14px 0; border-radius: 14px; border: 1.5px solid var(--border); background: #F8F8FA; font-size: 14px; font-weight: 800; cursor: pointer; color: var(--gray); transition: all 0.15s; }
-  .lang-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); box-shadow: 0 4px 16px rgba(0,122,255,0.3); }
-  .btn-primary { width: 100%; height: 58px; border-radius: 18px; background: var(--navy); color: #fff; border: none; font-size: 17px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,45,94,0.28); transition: transform 0.1s, opacity 0.1s; }
-  .btn-primary:active { transform: scale(0.97); opacity: 0.9; }
-  .info-box { background: rgba(255,255,255,0.8); border-radius: 20px; padding: 18px 20px; width: 100%; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-  .info-row { display: flex; gap: 10px; align-items: center; font-size: 14px; font-weight: 600; color: #3A3A3C; }
-
-  /* TOP BAR */
-  #top-bar { display: none; align-items: center; justify-content: space-between; padding: 13px 16px; background: rgba(255,255,255,0.85); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-bottom: 0.5px solid rgba(229,229,234,0.5); position: sticky; top: 0; z-index: 100; }
-  .top-btn-red { padding: 8px 13px; border-radius: 10px; border: none; background: var(--red); color: #fff; font-size: 13px; font-weight: 800; cursor: pointer; }
-  .top-btn-blue { padding: 8px 13px; border-radius: 10px; border: none; background: var(--blue); color: #fff; font-size: 13px; font-weight: 800; cursor: pointer; }
-  #counter { font-size: 26px; font-weight: 900; line-height: 1; text-align: center; }
-  #counter-label { font-size: 9px; color: var(--gray); font-weight: 700; letter-spacing: 0.5px; text-align: center; }
-
-  /* PHASES */
+  /* 말풍선 & 에러 스타일 */
+  .qa-list { padding: 20px; flex: 1; overflow-y: auto; }
+  .qa-pair { margin-bottom: 15px; }
+  .q-bubble { background: #fff; padding: 10px 15px; border-radius: 18px 18px 18px 4px; border: 1px solid var(--border); display: inline-block; font-weight: 600; }
+  .a-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 5px; margin-left: 20px; }
+  .a-bubble { background: #E8F5E9; padding: 10px 15px; border-radius: 4px 18px 18px 18px; color: #2E7D32; font-weight: 700; flex: 1; }
+  .a-bubble.error { background: #FFE5E5; color: var(--red); border: 1px solid var(--red); }
+  
+  /* 입력창 */
+  .input-area { position: sticky; bottom: 0; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); padding: 15px; border-top: 1px solid var(--border); }
+  .text-row { display: flex; gap: 8px; }
+  input { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border); outline: none; }
+  button { padding: 10px 20px; border-radius: 12px; border: none; background: var(--navy); color: #fff; font-weight: 800; cursor: pointer; }
+  .mic-btn { width: 100%; margin-bottom: 10px; height: 50px; border-radius: 15px; background: var(--blue); }
+  
+  #start-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 20px; }
   .phase { display: none; }
-  .phase.active { display: block; }
-  .center-box { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 85vh; padding: 32px; gap: 20px; }
-
-  /* PERFECT CENTER JACKPOT DIAL */
-  .dial-outer {
-    width: 260px; height: 300px; border-radius: 32px;
-    background: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.7);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.06);
-    overflow: hidden; position: relative;
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  }
-  .dial-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 5; background: linear-gradient(to bottom, var(--bg) 0%, transparent 25%, transparent 75%, var(--bg) 100%); }
-  #cascade-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; transition: opacity 0.8s ease; }
-  .cascade-word { position: absolute; width: 100%; text-align: center; left: 0; font-size: 32px; font-weight: 900; color: var(--navy); opacity: 0; animation: drop linear infinite; text-shadow: 0 4px 12px rgba(0,122,255,0.2); }
-  @keyframes drop {
-    0% { top: -20%; opacity: 0; filter: blur(5px) scale(0.8); }
-    30% { opacity: 1; filter: blur(0px) scale(1.1); color: var(--blue); }
-    70% { opacity: 1; filter: blur(0px) scale(1.1); color: var(--blue); }
-    100% { top: 120%; opacity: 0; filter: blur(5px) scale(0.8); }
-  }
-  .dial-final { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); font-size: 72px; font-weight: 900; color: var(--navy); letter-spacing: 2px; opacity: 0; z-index: 10; transition: all 0.9s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-shadow: 0 10px 30px rgba(0,122,255,0.25); }
-  .dial-final.active { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-
-  /* PLAYING */
-  #answer-reveal { display: none; background: #FFF9E6; border: 1.5px solid var(--yellow); border-radius: 14px; margin: 10px 14px 0; padding: 10px 16px; align-items: center; gap: 10px; }
-  .mystery-card { margin: 16px 14px; background: rgba(255,255,255,0.85); border-radius: 26px; padding: 22px 20px; text-align: center; box-shadow: 0 6px 28px rgba(0,0,0,0.04); border: 1px solid var(--border); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-  .mystery-word { font-size: 50px; font-weight: 900; color: var(--navy); letter-spacing: 18px; text-shadow: 0 4px 24px rgba(0,45,94,0.12); }
-  .mystery-sub { font-size: 13px; color: var(--gray); font-weight: 700; margin-top: 6px; }
-
-  /* QA Panel */
-  .qa-panel { margin: 0 14px 8px; background: rgba(255,255,255,0.85); border-radius: 22px; border: 1px solid var(--border); overflow: hidden; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-  .qa-header { width: 100%; padding: 13px 18px; background: none; border: none; cursor: pointer; font-weight: 800; font-size: 14px; color: var(--navy); display: flex; justify-content: space-between; align-items: center; }
-  .qa-list { max-height: 290px; overflow-y: auto; padding: 4px 16px 16px; }
-  .qa-pair { margin-bottom: 16px; }
-  .q-bubble { background: #F2F2F7; border-radius: 16px 16px 16px 4px; padding: 9px 13px; margin-bottom: 6px; display: flex; gap: 8px; align-items: flex-start; }
-  .q-badge { background: var(--blue); color: #fff; border-radius: 7px; padding: 2px 7px; font-size: 10px; font-weight: 800; flex-shrink: 0; margin-top: 2px; }
-  .q-text { font-size: 14px; font-weight: 600; color: var(--navy); }
-  .a-row { display: flex; align-items: flex-start; gap: 8px; margin-left: 16px; }
-  .a-bubble { flex: 1; background: #E8F5E9; border-radius: 4px 16px 16px 16px; padding: 9px 13px; font-size: 14px; font-weight: 700; color: #2E7D32; line-height: 1.5; }
-  .a-error { background: #FFE5E5; color: var(--red); }
-  .a-loading { margin-left: 16px; background: #F2F2F7; border-radius: 4px 16px 16px 16px; padding: 9px 13px; font-size: 13px; color: var(--gray); font-weight: 600; }
-  .replay-btn { flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border); background: #F8F8FA; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 2px; font-size: 16px; transition: all 0.15s; }
-  .replay-btn.playing { background: #FFE5E5; border-color: var(--red); }
-
-  /* Input Area */
-  #input-area { position: sticky; bottom: 0; background: rgba(242,242,247,0.85); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px); border-top: 0.5px solid rgba(229,229,234,0.6); padding: 12px 14px 28px; z-index: 100; }
-  .mic-badge { border-radius: 10px; padding: 7px 12px; font-size: 12px; font-weight: 700; text-align: center; margin-bottom: 8px; }
-  .speak-bar { background: #E3F0FF; border-radius: 12px; padding: 8px 14px; font-size: 13px; font-weight: 800; color: var(--blue); display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .stop-speak-btn { margin-left: auto; background: var(--blue); color: #fff; border: none; border-radius: 8px; padding: 4px 10px; font-size: 12px; font-weight: 800; cursor: pointer; }
-  .live-box { background: rgba(255,255,255,0.9); border: 1.5px dashed var(--red); border-radius: 12px; padding: 8px 12px; font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 8px; min-height: 36px; display: none; }
-  .analyzing-bar { background: #EAF3FF; color: var(--blue); border-radius: 12px; padding: 8px 14px; font-size: 13px; font-weight: 800; text-align: center; margin-bottom: 8px; display: none; }
-  .mic-btn { width: 100%; height: 62px; border-radius: 20px; background: var(--navy); color: #fff; border: none; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 6px 20px rgba(0,45,94,0.2); transition: background 0.2s, box-shadow 0.2s; }
-  .mic-btn.listening { background: var(--red); box-shadow: 0 6px 24px rgba(255,59,48,0.45); }
-  .mic-btn.disabled { opacity: 0.45; cursor: not-allowed; }
-  .text-row { display: flex; gap: 8px; margin-top: 10px; }
-  .text-input { flex: 1; height: 46px; border-radius: 14px; border: 1.5px solid var(--border); padding: 0 14px; font-size: 15px; font-weight: 600; outline: none; background: #fff; color: var(--navy); font-family: inherit; }
-  .text-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,122,255,0.15); }
-  .send-btn { height: 46px; padding: 0 18px; border-radius: 14px; background: var(--blue); color: #fff; border: none; font-size: 14px; font-weight: 800; cursor: pointer; }
-  .hint-text { font-size: 11px; color: #C7C7CC; text-align: center; margin-top: 6px; font-weight: 600; }
-
-  /* End screens */
-  .end-screen { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 40px 28px; gap: 18px; }
-  .end-title { font-size: 34px; font-weight: 900; color: #fff; text-align: center; }
-  .end-sub { color: rgba(255,255,255,0.75); font-weight: 700; font-size: 15px; text-align: center; }
-  .word-reveal-box { background: rgba(255,255,255,0.15); border-radius: 24px; padding: 20px 36px; text-align: center; width: 100%; max-width: 280px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-  .reveal-label { font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 800; }
-  .reveal-word { font-size: 40px; font-weight: 900; margin-top: 4px; }
-  .stat-row { display: flex; gap: 12px; width: 100%; max-width: 280px; }
-  .stat-box { flex: 1; background: rgba(255,255,255,0.12); border-radius: 18px; padding: 14px 10px; text-align: center; backdrop-filter: blur(10px); }
-  .stat-num { font-size: 30px; font-weight: 900; color: #fff; display: block; }
-  .stat-label { font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 700; display: block; }
-  .big-btn { width: 100%; max-width: 280px; height: 60px; border-radius: 20px; background: rgba(255,255,255,0.9); color: var(--navy); border: none; font-size: 18px; font-weight: 900; cursor: pointer; margin-top: 8px; }
+  .active { display: block; }
 </style>
 </head>
 <body>
 <div class="app">
+  <div id="start-screen" class="active">
+    <div style="font-size: 60px;">🔮</div>
+    <h1 style="font-size: 32px; font-weight: 900;">20 Questions</h1>
+    <button onclick="startGame()" style="width: 200px; height: 60px; font-size: 20px;">START</button>
+  </div>
 
-<div id="start-screen">
-  <div class="glow-orb"></div>
-  <div style="text-align:center;position:relative;">
-    <div class="main-icon">🔮</div>
-    <h1 class="main-title" id="start-title">20 Questions</h1>
-    <p class="main-sub" id="start-sub">AI와 함께하는 단어 맞추기</p>
-  </div>
-  <div class="lang-card" style="position:relative;">
-    <p class="lang-label">CHOOSE LANGUAGE · 언어 선택</p>
-    <div class="lang-btns">
-      <button class="lang-btn active" id="btn-en" onclick="selectLang('en')">🇺🇸 English</button>
-      <button class="lang-btn" id="btn-ko" onclick="selectLang('ko')">🇰🇷 한국어</button>
-    </div>
-    <button class="btn-primary" onclick="startGame()">
-      <span style="font-size:20px">▶</span>
-      <span id="start-btn-txt">Start Game</span>
-    </button>
-  </div>
-  <div class="info-box" style="max-width:360px;position:relative;">
-    <div class="info-row"><span>🎙</span><span id="info1">Ask by voice or text</span></div>
-    <div class="info-row"><span>🔊</span><span id="info2">AI answers spoken aloud in English</span></div>
-    <div class="info-row"><span>🔄</span><span id="info3">Replay any answer anytime</span></div>
-    <div class="info-row"><span>🏆</span><span id="info4">Guess within 20 questions!</span></div>
-  </div>
-</div>
-
-<div id="top-bar">
-  <button class="top-btn-red" onclick="resetGame()" id="end-btn">End</button>
-  <div>
-    <div id="counter" style="color:var(--green)">0<span style="font-size:12px;color:var(--gray);font-weight:700">/20</span></div>
-    <div id="counter-label">QUESTIONS</div>
-  </div>
-  <button class="top-btn-blue" onclick="toggleAnswer()" id="show-ans-btn">Show Answer</button>
-</div>
-
-<div id="phase-dial" class="phase">
-  <div class="center-box">
-    <p id="dial-label" style="color:var(--gray);font-weight:700;font-size:15px;">AI is choosing a word…</p>
-    <div class="dial-outer">
-      <div class="dial-overlay"></div>
-      <div id="cascade-container"></div>
-      <div class="dial-final" id="dial-final">???</div>
+  <div id="phase-dial" class="phase">
+    <div class="center-box" style="text-align: center; padding-top: 100px;">
+      <p style="font-weight: 700; color: var(--gray);">AI가 단어를 고르는 중...</p>
+      <div class="dial-outer">
+        <div id="cascade-container"></div>
+        <div class="dial-final" id="dial-final">???</div>
+      </div>
     </div>
   </div>
-</div>
 
-<div id="phase-thinking" class="phase">
-  <div class="center-box" id="thinking-box">
-    <div style="font-size:72px;margin-bottom:16px">🤔</div>
-    <h2 id="thinking-txt" style="font-size:28px;font-weight:900;color:var(--navy)">Thinking<span id="dots">...</span></h2>
-    <p id="thinking-sub" style="color:var(--gray);font-weight:600;font-size:14px;margin-top:10px">AI is locking in the secret word</p>
-  </div>
-</div>
-
-<div id="phase-play" class="phase">
-  <div id="answer-reveal">
-    <span id="ans-label" style="font-size:12px;font-weight:800;color:var(--gray)">Answer:</span>
-    <span id="ans-word" style="font-size:22px;font-weight:900;color:var(--red)"></span>
-  </div>
-
-  <div class="mystery-card">
-    <div class="mystery-word">???</div>
-    <div class="mystery-sub" id="mystery-sub">What's the secret word?</div>
-  </div>
-
-  <div class="qa-panel" id="qa-panel" style="display:none;">
-    <button class="qa-header" onclick="toggleQA()">
-      <span id="qa-panel-title">💬 Q&amp;A History (0)</span>
-      <span id="qa-toggle-icon">▲</span>
-    </button>
+  <div id="phase-play" class="phase">
+    <div id="top-bar" style="padding: 15px; background: #fff; border-bottom: 1px solid var(--border); text-align: center;">
+      <span id="counter" style="font-size: 20px; font-weight: 900; color: var(--green);">0/20</span>
+    </div>
     <div class="qa-list" id="qa-list"></div>
-  </div>
-
-  <div id="input-area">
-    <div id="mic-badge" class="mic-badge">Checking microphone…</div>
-    <div id="speak-bar" class="speak-bar" style="display:none">
-      <span>🔊</span><span id="speak-bar-txt">Speaking…</span>
-      <button class="stop-speak-btn" onclick="stopSpeaking()" id="stop-speak-btn">⏹ Stop</button>
+    <div class="input-area">
+      <div id="analyzing-bar" style="text-align: center; font-size: 12px; color: var(--blue); margin-bottom: 5px; display: none;">AI 답변 생성 중...</div>
+      <button class="mic-btn" onclick="toggleMic()" id="mic-btn">🎙 질문하기 (음성)</button>
+      <div class="text-row">
+        <input type="text" id="text-input" placeholder="질문을 입력하세요..." onkeydown="if(event.key==='Enter')sendText()">
+        <button onclick="sendText()">전송</button>
+      </div>
     </div>
-    <div class="live-box" id="live-box">
-      <span style="font-size:10px;color:var(--red);font-weight:800;margin-right:6px">● LIVE</span>
-      <span id="live-txt"></span>
-    </div>
-    <div class="analyzing-bar" id="analyzing-bar">AI thinking…</div>
-    <button class="mic-btn" id="mic-btn" onclick="toggleMic()">
-      <span style="font-size:26px">🎙</span><span id="mic-btn-txt">Ask a Question (Voice)</span>
-    </button>
-    <div class="text-row">
-      <input type="text" class="text-input" id="text-input" placeholder="Or type your question here…" onkeydown="if(event.key==='Enter')sendText()">
-      <button class="send-btn" onclick="sendText()" id="send-btn">Send</button>
-    </div>
-    <p class="hint-text" id="hint-txt">e.g. Is it an animal? · Can you eat it?</p>
   </div>
 </div>
 
-<div id="phase-win" class="phase">
-  <div class="end-screen" id="win-screen" style="background:linear-gradient(155deg,#002D5E 0%,#007AFF 100%)">
-    <div style="font-size:88px;filter:drop-shadow(0 8px 24px rgba(0,0,0,0.3))">🎉</div>
-    <h1 class="end-title" id="win-title">Correct!</h1>
-    <p class="end-sub" id="win-sub">You guessed it!</p>
-    <div class="word-reveal-box">
-      <div class="reveal-label" id="win-ans-label">Answer:</div>
-      <div class="reveal-word" style="color:var(--yellow)" id="win-word"></div>
-    </div>
-    <div class="stat-row">
-      <div class="stat-box"><span class="stat-num" id="win-used">0</span><span class="stat-label" id="win-used-label">Used</span></div>
-      <div class="stat-box"><span class="stat-num" id="win-saved">0</span><span class="stat-label" id="win-saved-label">Saved</span></div>
-    </div>
-    <button class="big-btn" onclick="resetGame()" id="win-replay-btn">Play Again</button>
-  </div>
-</div>
+<script>
+let secretWord = '', secretCategory = '', questionCount = 0, qaHistory = [], isAnswering = false;
+const API_BASE_URL = '/api';
 
-<div id="phase-lose" class="phase">
-  <div class="end-screen" id="lose-screen" style="background:linear-gradient(155deg,#1C1C1E 0%,#3A3A3C 100%)">
-    <div style="font-size:88px">😢</div>
-    <h1 class="end-title" id="lose-title">Game Over!</h1>
-    <p class="end-sub" id="lose-sub">You've used all 20 questions.</p>
-    <div class="word-reveal-box">
-      <div class="reveal-label" id="lose-ans-label" style="color:rgba(255,255,255,0.4)">Answer:</div>
-      <div class="reveal-word" style="color:var(--red)" id="lose-word"></div>
-    </div>
-    <button class="big-btn" onclick="resetGame()" id="lose-replay-btn">Play Again</button>
-  </div>
-</div>
-
-</div><script>
-const API_BASE_URL = '/api'; 
-
-let lang = 'en';
-let secretWord = '';
-let secretCategory = '';
-let questionCount = 0;
-let qaHistory = [];
-let isAnswering = false;
-let showAnswerToggle = false;
-let showQAToggle = true;
-let isSpeaking = false;
-let speakingIdx = null;
-let micStatus = 'checking'; 
-let isListening = false;
-let recognition = null;
-let cascadeInterval = null;
-let dotsTimer = null;
-
-const TXT = {
-  en: {
-    dialLabel: 'AI is choosing a word…', thinkingTxt: 'Thinking', thinkingSub: 'AI is locking in the secret word',
-    wordReady: 'Word Ready!', wordReadySub: 'Start asking your questions!',
-    endBtn: 'End', showAns: 'Show Answer', ansLabel: 'Answer:', counterLabel: 'QUESTIONS', mysterySub: "What's the secret word?",
-    micChecking: 'Checking microphone…', micReady: '✅ Microphone ready — ask by voice', micDenied: '🚫 Mic denied — please type below',
-    micNoDevice: '🎙 No mic found — please type below', micNoSupport: '⚠️ Voice not supported — type below', micFileProto: '⚠️ Use local server for mic',
-    micBtnTxt: 'Ask a Question (Voice)', micListening: '🔴 Listening… (tap to stop)', speakBar: '🔊 Speaking…', stopSpeak: '⏹ Stop',
-    analyzingBar: 'AI thinking…', placeholder: 'Or type your question here…', sendBtn: 'Send', hintTxt: 'e.g. Is it an animal? · Can you eat it?',
-    qaTitle: '💬 Q&A History', winTitle: 'Correct! 🎉', winSub: 'You guessed it!', loseTitle: 'Game Over! 😢', loseSub: "You've used all 20 questions.",
-    ansRevealLabel: 'Answer:', winUsedLabel: 'Questions Used', winSavedLabel: 'Saved', playAgain: 'Play Again',
-    info1: 'Ask by voice or text', info2: 'AI answers spoken aloud in English', info3: 'Replay any answer anytime', info4: 'Guess within 20 questions!',
-    startBtn: 'Start Game', startTitle: '20 Questions', startSub: 'AI Word Guessing Game',
-  },
-  ko: {
-    dialLabel: 'AI가 단어를 고르는 중…', thinkingTxt: '생각중', thinkingSub: 'AI가 단어를 정하고 있어요',
-    wordReady: '단어 생각 완료!', wordReadySub: '이제 질문을 시작하세요!', endBtn: '종료', showAns: '정답 보기', ansLabel: '정답:', counterLabel: '질문 횟수', mysterySub: '이 단어를 맞춰보세요!',
-    micChecking: '마이크 확인 중…', micReady: '✅ 마이크 정상 — 음성으로 질문하세요', micDenied: '🚫 마이크 권한 거부됨 — 텍스트로 입력하세요',
-    micNoDevice: '🎙 마이크 없음 — 텍스트로 입력하세요', micNoSupport: '⚠️ 음성인식 미지원 — 텍스트 사용', micFileProto: '⚠️ 서버 환경에서만 마이크 가능',
-    micBtnTxt: '🎙 질문하기 (음성)', micListening: '🔴 듣는 중… (탭하여 중지)', speakBar: '🔊 음성 재생 중', stopSpeak: '⏹ 정지',
-    analyzingBar: 'AI 답변 중…', placeholder: '또는 여기에 질문을 입력…', sendBtn: '전송', hintTxt: '예: Is it an animal? · Can you eat it?',
-    qaTitle: '💬 질문 기록', winTitle: '정답입니다! 🎉', winSub: '축하합니다! 단어를 맞추셨어요!', loseTitle: '아쉽네요! 😢', loseSub: '20개의 질문을 모두 사용했습니다.',
-    ansRevealLabel: '정답:', winUsedLabel: '사용한 질문', winSavedLabel: '남은 질문', playAgain: '다시 하기',
-    info1: '음성 또는 텍스트로 질문', info2: 'AI 답변은 영어 음성으로', info3: '다시 듣기 버튼 제공', info4: '20번 안에 단어를 맞춰보세요!',
-    startBtn: '게임 시작', startTitle: '스무고개', startSub: 'AI와 함께하는 단어 맞추기',
-  }
-};
-function t(key) { return (TXT[lang] && TXT[lang][key]) || TXT.en[key] || key; }
-
-window.onload = () => { applyStartLang(); };
-
-function selectLang(l) {
-  lang = l;
-  document.getElementById('btn-en').classList.toggle('active', l === 'en');
-  document.getElementById('btn-ko').classList.toggle('active', l === 'ko');
-  applyStartLang();
+function startGame() {
+  document.getElementById('start-screen').classList.remove('active');
+  document.getElementById('phase-dial').classList.add('active');
+  startDialAnimation();
 }
 
-function applyStartLang() {
-  document.getElementById('start-title').textContent = t('startTitle');
-  document.getElementById('start-sub').textContent = t('startSub');
-  document.getElementById('start-btn-txt').textContent = t('startBtn');
-  document.getElementById('info1').textContent = t('info1');
-  document.getElementById('info2').textContent = t('info2');
-  document.getElementById('info3').textContent = t('info3');
-  document.getElementById('info4').textContent = t('info4');
-}
-
-/* TTS & STT */
-function getEnglishVoice() {
-  const voices = speechSynthesis.getVoices();
-  const preferred = ['Samantha','Karen','Moira','Google US English','Alex','Victoria','Daniel','Fiona'];
-  return voices.find(v => preferred.some(p => v.name.includes(p)) && v.lang.startsWith('en'))
-      || voices.find(v => v.lang.startsWith('en-US')) || voices.find(v => v.lang.startsWith('en')) || null;
-}
-
-if ('speechSynthesis' in window) {
-  speechSynthesis.getVoices();
-  speechSynthesis.addEventListener('voiceschanged', () => speechSynthesis.getVoices());
-}
-
-function speakText(text, rate = 0.92, onEnd = null) {
-  if (!('speechSynthesis' in window)) return;
-  speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = 'en-US'; utter.rate = rate; utter.pitch = 1.05; utter.volume = 1;
-  const voice = getEnglishVoice();
-  if (voice) utter.voice = voice;
-  utter.onend = () => { setIsSpeaking(false, null); if (onEnd) onEnd(); };
-  utter.onerror = () => { setIsSpeaking(false, null); };
-  speechSynthesis.speak(utter);
-}
-
-function stopSpeaking() { speechSynthesis.cancel(); setIsSpeaking(false, null); }
-function setIsSpeaking(val, idx) {
-  isSpeaking = val; speakingIdx = idx;
-  document.getElementById('speak-bar').style.display = val ? 'flex' : 'none';
-  document.querySelectorAll('.replay-btn').forEach((btn, i) => {
-    btn.classList.toggle('playing', val && i === idx);
-    btn.textContent = (val && i === idx) ? '⏹' : '🔊';
-  });
-}
-function playAnswer(text, idx) {
-  if (isSpeaking && speakingIdx === idx) { stopSpeaking(); return; }
-  setIsSpeaking(true, idx); speakText(text, 0.92);
-}
-
-async function diagnoseMic() {
-  setMicStatus('checking');
-  if (location.protocol === 'file:') { setMicStatus('file_protocol'); return; }
-  if (!window.SpeechRecognition && !window.webkitSpeechRecognition) { setMicStatus('no_support'); return; }
-  if (!navigator.mediaDevices?.getUserMedia) { setMicStatus('no_support'); return; }
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach(t => t.stop());
-    setMicStatus('ready');
-  } catch(e) {
-    if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') setMicStatus('denied');
-    else if (e.name === 'NotFoundError') setMicStatus('no_device');
-    else setMicStatus('no_support');
-  }
-}
-
-function setMicStatus(status) {
-  micStatus = status;
-  const badge = document.getElementById('mic-badge');
-  const micBtn = document.getElementById('mic-btn');
-  const configs = {
-    checking:     { bg:'#F2F2F7', col:'#8E8E93', txt: t('micChecking') },
-    ready:        { bg:'#E8F5E9', col:'#2E7D32', txt: t('micReady') },
-    denied:       { bg:'#FFF0F0', col:'#FF3B30', txt: t('micDenied') },
-    no_device:    { bg:'#FFF0F0', col:'#FF3B30', txt: t('micNoDevice') },
-    no_support:   { bg:'#FFF9E6', col:'#FF9500', txt: t('micNoSupport') },
-    file_protocol:{ bg:'#FFF9E6', col:'#FF9500', txt: t('micFileProto') },
-  };
-  const cfg = configs[status] || configs.checking;
-  badge.style.background = cfg.bg; badge.style.color = cfg.col; badge.textContent = cfg.txt;
-  const blocked = ['no_support','file_protocol'].includes(status);
-  micBtn.classList.toggle('disabled', blocked);
-  if (blocked) micBtn.onclick = null; else micBtn.onclick = toggleMic;
-}
-
-function toggleMic() {
-  if (['no_support','file_protocol'].includes(micStatus)) return;
-  if (isListening) { stopListening(); return; }
-  startListening();
-}
-
-function startListening() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { setMicStatus('no_support'); return; }
-  try {
-    recognition = new SR();
-    recognition.lang = lang === 'ko' ? 'ko-KR' : 'en-US';
-    recognition.continuous = false; recognition.interimResults = true;
-    recognition.onstart = () => {
-      isListening = true; document.getElementById('mic-btn').classList.add('listening');
-      document.getElementById('mic-btn-txt').textContent = t('micListening');
-    };
-    recognition.onresult = (e) => {
-      const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
-      document.getElementById('live-txt').textContent = transcript;
-      document.getElementById('live-box').style.display = 'block';
-    };
-    recognition.onerror = (e) => {
-      isListening = false; resetMicBtn();
-      if (e.error === 'not-allowed' || e.error === 'permission-denied') setMicStatus('denied');
-    };
-    recognition.onend = () => {
-      isListening = false; resetMicBtn();
-      const liveTxt = document.getElementById('live-txt').textContent.trim();
-      document.getElementById('live-box').style.display = 'none';
-      document.getElementById('live-txt').textContent = '';
-      
-      if (liveTxt) {
-        const inputEl = document.getElementById('text-input');
-        inputEl.value = liveTxt;
-        inputEl.focus(); 
-      }
-    };
-    recognition.start();
-  } catch(e) {
-    isListening = false; resetMicBtn(); setMicStatus('no_support');
-  }
-}
-
-function stopListening() { if (recognition) { try { recognition.stop(); } catch(e){} } isListening = false; resetMicBtn(); }
-function resetMicBtn() { document.getElementById('mic-btn').classList.remove('listening'); document.getElementById('mic-btn-txt').textContent = t('micBtnTxt'); }
-
-/* GAME FLOW & ANIMATIONS */
-function startCascadeDial() {
+function startDialAnimation() {
   const container = document.getElementById('cascade-container');
-  container.innerHTML = ''; container.style.opacity = '1';
-  document.getElementById('dial-final').classList.remove('active');
-
-  const words = ['Ocean', 'Tiger', 'Galaxy', 'Robot', 'Apple', 'Mountain', 'Diamond', 'Castle', 'Piano', 'Dragon', 'Forest', 'Rocket', 'Shadow', 'Eclipse'];
-  
-  cascadeInterval = setInterval(() => {
+  const words = ['Apple','Tiger','Ocean','Pizza','Robot','Smart'];
+  const interval = setInterval(() => {
     const el = document.createElement('div');
     el.className = 'cascade-word';
-    el.textContent = words[Math.floor(Math.random() * words.length)];
-    el.style.animationDuration = (0.35 + Math.random() * 0.25) + 's';
+    el.textContent = words[Math.floor(Math.random()*words.length)];
     container.appendChild(el);
-    setTimeout(() => { if (container.contains(el)) el.remove(); }, 800);
-  }, 60);
-}
-
-function updateCounter() {
-  const pct = questionCount / 20;
-  const col = pct < 0.5 ? 'var(--green)' : pct < 0.75 ? 'var(--orange)' : 'var(--red)';
-  document.getElementById('counter').innerHTML = `${questionCount}<span style="font-size:12px;color:var(--gray);font-weight:700">/20</span>`;
-  document.getElementById('counter').style.color = col;
-}
-
-async function startGame() {
-  document.getElementById('start-screen').style.display = 'none';
-  showPhase('dial'); document.getElementById('top-bar').style.display = 'none';
-  document.getElementById('dial-label').textContent = t('dialLabel'); 
-  
-  startCascadeDial();
+    setTimeout(() => el.remove(), 500);
+  }, 100);
 
   setTimeout(async () => {
-    clearInterval(cascadeInterval);
-    document.getElementById('cascade-container').style.opacity = '0';
+    clearInterval(interval);
+    container.style.display = 'none';
     document.getElementById('dial-final').classList.add('active');
-
-    setTimeout(async () => {
-      showPhase('thinking');
-      document.getElementById('thinking-txt').textContent = t('thinkingTxt');
-      document.getElementById('thinking-sub').textContent = t('thinkingSub');
-
-      let d = 0;
-      dotsTimer = setInterval(() => { d = (d + 1) % 4; document.getElementById('dots').textContent = '.'.repeat(d + 1); }, 400);
-
-      try {
-        const res = await fetch(`${API_BASE_URL}/get-word`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ lang })
-        });
-        if (!res.ok) throw new Error('API Error');
-        const wordData = await res.json();
-        secretWord = wordData.word; secretCategory = wordData.category;
-      } catch(e) {
-        secretWord = lang === 'ko' ? '고양이' : 'elephant';
-        secretCategory = lang === 'ko' ? '동물' : 'animal';
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/get-word`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({lang:'ko'}) });
+      if(!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error?.message || res.status);
       }
-
-      clearInterval(dotsTimer);
-      document.getElementById('thinking-box').innerHTML = `
-        <div style="font-size:72px;margin-bottom:12px">✅</div>
-        <h2 style="font-size:26px;font-weight:900;color:var(--navy)">${t('wordReady')}</h2>
-        <p style="color:var(--green);font-weight:700;font-size:16px;margin-top:8px">${t('wordReadySub')}</p>
-      `;
-      speakText('Word ready! Start asking your questions!', 1.0);
-
-      setTimeout(() => { showPlayPhase(); }, 2500);
-    }, 1500); 
-  }, 3500); 
+      const data = await res.json();
+      secretWord = data.word; secretCategory = data.category;
+      setTimeout(() => {
+        document.getElementById('phase-dial').classList.remove('active');
+        document.getElementById('phase-play').classList.add('active');
+      }, 1000);
+    } catch(e) {
+      alert("단어 생성 실패: " + e.message + "\n(Vercel의 API 키 설정을 확인해주세요)");
+    }
+  }, 3000);
 }
 
-function showPlayPhase() {
-  showPhase('play'); document.getElementById('top-bar').style.display = 'flex';
-  document.getElementById('end-btn').textContent = t('endBtn'); document.getElementById('show-ans-btn').textContent = t('showAns');
-  document.getElementById('counter-label').textContent = t('counterLabel'); document.getElementById('mystery-sub').textContent = t('mysterySub');
-  document.getElementById('mic-btn-txt').textContent = t('micBtnTxt'); document.getElementById('text-input').placeholder = t('placeholder');
-  document.getElementById('send-btn').textContent = t('sendBtn'); document.getElementById('hint-txt').textContent = t('hintTxt');
-  document.getElementById('analyzing-bar').textContent = t('analyzingBar'); document.getElementById('speak-bar-txt').textContent = t('speakBar');
-  document.getElementById('stop-speak-btn').textContent = t('stopSpeak');
-  updateCounter(); diagnoseMic();
-}
-
-function sendText() {
-  const val = document.getElementById('text-input').value.trim();
-  if (!val) return;
-  document.getElementById('text-input').value = ''; handleQuestion(val);
-}
-
-// ⚡ 에러 추적기가 포함된 핵심 질문 처리 로직
 async function handleQuestion(question) {
-  if (!question.trim() || isAnswering || questionCount >= 20) return;
-  isAnswering = true; questionCount++; updateCounter();
-
-  const entryIdx = qaHistory.length;
-  qaHistory.push({ question, answer: null, error: false }); renderQA();
-
-  document.getElementById('analyzing-bar').style.display = 'block'; setInputEnabled(false);
+  if (isAnswering || questionCount >= 20) return;
+  isAnswering = true; questionCount++;
+  document.getElementById('counter').textContent = `${questionCount}/20`;
+  
+  const idx = qaHistory.length;
+  qaHistory.push({ q: question, a: null, err: false });
+  renderQA();
+  document.getElementById('analyzing-bar').style.display = 'block';
 
   try {
     const res = await fetch(`${API_BASE_URL}/check`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secretWord, secretCategory, question })
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ secretWord, secretCategory, question })
     });
-    
-    if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `서버 에러 (${res.status})`);
-    }
-    
-    const parsed = await res.json();
-    qaHistory[entryIdx].answer = parsed.answer; 
-    
-    setTimeout(() => { setIsSpeaking(true, entryIdx); speakText(parsed.answer, 0.92); }, 200);
 
-    if (parsed.type === 'guess' && parsed.correct) {
-      setTimeout(() => { speakText('Correct! Congratulations! You guessed it!'); showWin(); }, 600);
-    } else if (questionCount >= 20) {
-      setTimeout(() => { speakText(`Game over. The answer was ${secretWord}.`); showLose(); }, 1200);
+    if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error?.message || errData.error || `서버 에러 (${res.status})`);
     }
-  } catch(e) {
-    // 🔥 실제 오류 내용을 말풍선에 띄워줍니다!
-    qaHistory[entryIdx].answer = `⚠️ 오류: ${e.message}`;
-    qaHistory[entryIdx].error = true;
+
+    const data = await res.json();
+    qaHistory[idx].a = data.answer;
+  } catch (e) {
+    qaHistory[idx].a = `⚠️ 오류: ${e.message}`;
+    qaHistory[idx].err = true;
     questionCount--; 
-    updateCounter();
   } finally {
-    document.getElementById('analyzing-bar').style.display = 'none'; 
-    isAnswering = false; 
-    setInputEnabled(true);
+    isAnswering = false;
+    document.getElementById('analyzing-bar').style.display = 'none';
     renderQA();
   }
 }
 
-function setInputEnabled(enabled) { document.getElementById('text-input').disabled = !enabled; document.getElementById('send-btn').disabled = !enabled; }
-
-/* RENDER HELPERS */
 function renderQA() {
-  const panel = document.getElementById('qa-panel'); const list = document.getElementById('qa-list');
-  panel.style.display = qaHistory.length > 0 ? 'block' : 'none';
-  document.getElementById('qa-panel-title').textContent = `${t('qaTitle')} (${qaHistory.length})`;
-  list.innerHTML = '';
-  qaHistory.forEach((item, i) => {
-    const pair = document.createElement('div'); pair.className = 'qa-pair';
-    const qBubble = document.createElement('div'); qBubble.className = 'q-bubble';
-    qBubble.innerHTML = `<span class="q-badge">Q${i+1}</span><span class="q-text">${escHtml(item.question)}</span>`;
-    pair.appendChild(qBubble);
-    if (item.answer != null) {
-      const aRow = document.createElement('div'); aRow.className = 'a-row';
-      const aBubble = document.createElement('div'); 
-      aBubble.className = 'a-bubble' + (item.error ? ' a-error' : ''); 
-      aBubble.textContent = item.answer;
-      aRow.appendChild(aBubble);
-      
-      if (!item.error) {
-        const replayBtn = document.createElement('button');
-        replayBtn.className = 'replay-btn' + (isSpeaking && speakingIdx === i ? ' playing' : '');
-        replayBtn.textContent = (isSpeaking && speakingIdx === i) ? '⏹' : '🔊';
-        replayBtn.onclick = () => playAnswer(item.answer, i);
-        aRow.appendChild(replayBtn); 
-      }
-      pair.appendChild(aRow);
-    } else {
-      const loading = document.createElement('div'); loading.className = 'a-loading'; loading.textContent = '⏳ ' + t('analyzingBar'); pair.appendChild(loading);
-    }
-    list.appendChild(pair);
-  });
+  const list = document.getElementById('qa-list');
+  list.innerHTML = qaHistory.map((item, i) => `
+    <div class="qa-pair">
+      <div class="q-bubble">Q${i+1}. ${item.q}</div><br>
+      ${item.a ? `<div class="a-row"><div class="a-bubble ${item.err ? 'error' : ''}">${item.a}</div></div>` : ''}
+    </div>
+  `).join('');
   list.scrollTop = list.scrollHeight;
 }
 
-function showPhase(name) { document.querySelectorAll('.phase').forEach(el => el.classList.remove('active')); document.querySelectorAll('.end-screen').forEach(el => el.style.display = 'none'); const phase = document.getElementById('phase-' + name); if (phase) phase.classList.add('active'); }
-function toggleAnswer() { showAnswerToggle = !showAnswerToggle; const box = document.getElementById('answer-reveal'); box.style.display = showAnswerToggle ? 'flex' : 'none'; if (showAnswerToggle) { document.getElementById('ans-label').textContent = t('ansLabel'); document.getElementById('ans-word').textContent = secretWord; } }
-function toggleQA() { showQAToggle = !showQAToggle; document.getElementById('qa-list').style.display = showQAToggle ? 'block' : 'none'; document.getElementById('qa-toggle-icon').textContent = showQAToggle ? '▲' : '▼'; }
-function showWin() { showPhase('win'); document.getElementById('top-bar').style.display = 'none'; document.getElementById('win-screen').style.display = 'flex'; document.getElementById('win-title').textContent = t('winTitle'); document.getElementById('win-sub').textContent = t('winSub'); document.getElementById('win-ans-label').textContent = t('ansRevealLabel'); document.getElementById('win-word').textContent = secretWord; document.getElementById('win-used').textContent = questionCount; document.getElementById('win-saved').textContent = 20 - questionCount; document.getElementById('win-used-label').textContent = t('winUsedLabel'); document.getElementById('win-saved-label').textContent = t('winSavedLabel'); document.getElementById('win-replay-btn').textContent = t('playAgain'); }
-function showLose() { showPhase('lose'); document.getElementById('top-bar').style.display = 'none'; document.getElementById('lose-screen').style.display = 'flex'; document.getElementById('lose-title').textContent = t('loseTitle'); document.getElementById('lose-sub').textContent = t('loseSub'); document.getElementById('lose-ans-label').textContent = t('ansRevealLabel'); document.getElementById('lose-word').textContent = secretWord; document.getElementById('lose-replay-btn').textContent = t('playAgain'); }
-function resetGame() {
-  speechSynthesis.cancel(); stopListening(); clearInterval(cascadeInterval); clearInterval(dotsTimer);
-  secretWord = ''; secretCategory = ''; questionCount = 0; qaHistory = [];
-  isAnswering = false; showAnswerToggle = false; showQAToggle = true; isSpeaking = false; speakingIdx = null;
-  document.getElementById('top-bar').style.display = 'none';
-  document.getElementById('thinking-box').innerHTML = `<div style="font-size:72px;margin-bottom:16px">🤔</div><h2 id="thinking-txt" style="font-size:28px;font-weight:900;color:var(--navy)">Thinking<span id="dots">...</span></h2><p id="thinking-sub" style="color:var(--gray);font-weight:600;font-size:14px;margin-top:10px">AI is locking in the secret word</p>`;
-  document.getElementById('qa-panel').style.display = 'none'; document.getElementById('qa-list').innerHTML = ''; document.getElementById('answer-reveal').style.display = 'none'; document.getElementById('speak-bar').style.display = 'none'; document.getElementById('live-box').style.display = 'none'; document.getElementById('analyzing-bar').style.display = 'none'; document.getElementById('text-input').value = '';
-  document.querySelectorAll('.phase').forEach(el => el.classList.remove('active')); document.querySelectorAll('.end-screen').forEach(el => el.style.display = 'none'); document.getElementById('start-screen').style.display = 'flex'; applyStartLang();
+function sendText() {
+  const input = document.getElementById('text-input');
+  if(!input.value.trim()) return;
+  handleQuestion(input.value);
+  input.value = '';
 }
-function escHtml(str) { return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function toggleMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return alert("지원하지 않는 브라우저입니다.");
+  const recognition = new SR();
+  recognition.lang = 'ko-KR';
+  recognition.onstart = () => document.getElementById('mic-btn').textContent = "🔴 듣고 있어요...";
+  recognition.onresult = (e) => handleQuestion(e.results[0][0].transcript);
+  recognition.onend = () => document.getElementById('mic-btn').textContent = "🎙 질문하기 (음성)";
+  recognition.start();
+}
 </script>
 </body>
 </html>
