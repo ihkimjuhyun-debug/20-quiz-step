@@ -3,42 +3,28 @@ export default async function handler(req, res) {
   const { secretWord, secretCategory, question } = req.body;
   const API_KEY = process.env.ANTHROPIC_API_KEY;
 
-  // 1. AI에게 스무고개 게임의 본질과 흔한 질문 패턴을 주입합니다.
-  const systemPrompt = `You are a highly intelligent host for a '20 Questions' game. Return ONLY raw JSON, no markdown.
+  // 1. 유기적인 답변(Organic Answers)과 STT 오류 보정을 동시에 지시
+  const systemPrompt = `You are a highly intelligent and conversational host for a '20 Questions' game.
 
-CRITICAL INSTRUCTION FOR STT (Speech-to-Text) ERRORS:
-The user's input comes from voice dictation and will contain severe phonetic errors. You MUST understand the mechanics of 20 Questions. Players universally ask about specific categories. If the input sounds weird, you MUST phonetically map it to one of these common questions before answering:
+CRITICAL RULES:
+1. You MUST return ONLY valid JSON. Do not include any introductory or explanatory text.
+2. The user's input comes from STT. Infer the correct intent if there are phonetic errors (e.g., "is it double" -> "is it edible", "울에 살아" -> "물에 살아").
+3. Provide ORGANIC, CONTEXTUAL, and NATURAL answers. Do NOT just say "Yes" or "No". Add helpful, specific context based on the secret word.
+   - Example 1: (Word: Elephant, Q: "Can I see this one?") -> "Yes, but usually you have to go to a zoo or travel to Africa or Asia to see it."
+   - Example 2: (Word: Sun, Q: "do we usually eat?") -> "No, you definitely cannot eat this! It is a giant star in the sky."
+   - Example 3: (Word: Kimchi, Q: "is it double / edible?") -> "Yes, it is very edible and people in Korea eat it almost every day."`;
 
-1. Edibility (Food/Eating):
-   - STT errors: "is it double", "eightable", "is it evil", "이거 먹을 쓰 있어"
-   - Correct Intent: "Is it edible? / Can you eat it?"
-2. Habitat/Location:
-   - STT errors: "울에 살아", "바다에 나라"
-   - Correct Intent: "Does it live in water? / 물에 살아?"
-3. Animacy/Category:
-   - STT errors: "바람이야", "애니 말"
-   - Correct Intent: "Is it a person? (사람이야?) / Is it an animal?"
-4. Size/Properties:
-   - STT errors: "크가 커", "heavy"
-   - Correct Intent: "Is it big? / Is it heavy?"
-
-RULE: NEVER take nonsense literal. Always silently translate the phonetic noise into the most logical 20-Questions query based on the context above.`;
-
-  // 2. 사용자의 입력을 교정 필터에 먼저 거친 후 답변을 생성하도록 지시합니다.
   const userPrompt = `Secret word: "${secretWord}" (category: ${secretCategory})
 User's Raw STT input: "${question}"
 
-Process:
-1. Identify if the raw input contains STT phonetic errors.
-2. Snap it to the closest logical 20-Questions query (e.g., "is it double" -> "is it edible").
-3. Determine if the intent is a direct guess or a yes/no question.
-
-If direct guess:
+Format your response EXACTLY like this JSON object:
+If it's a direct correct guess:
 {"type":"guess","correct":true,"answer":"Correct! It is ${secretWord}!"}
-or {"type":"guess","correct":false,"answer":"Not quite, keep asking!"}
-
-If yes/no question (answer in one concise English sentence based on the CORRECTED intent):
-{"type":"question","answer":"Yes, it is edible."}`;
+If it's an incorrect guess:
+{"type":"guess","correct":false,"answer":"Not quite! Keep guessing."}
+If it's a yes/no question:
+{"type":"question","answer":"<Your natural, organic, contextual 1-2 sentence answer here>"}
+`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -49,8 +35,8 @@ If yes/no question (answer in one concise English sentence based on the CORRECTE
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20240620', // 혹은 최신 모델 사용
-        max_tokens: 150,
+        model: 'claude-3-5-sonnet-20240620',
+        max_tokens: 250, // 유기적인 긴 답변을 위해 토큰 수 증가
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }]
       })
@@ -60,11 +46,15 @@ If yes/no question (answer in one concise English sentence based on the CORRECTE
     const data = await response.json();
     const rawText = data.content[0].text;
     
-    // JSON 파싱 에러 방지를 위한 안전 장치
-    const parsed = JSON.parse(rawText.replace(/```json|```/g, '').trim());
+    // 2. 에러 방지용 무적 파싱 로직 (AI가 쓸데없는 말을 덧붙여도 JSON만 정확히 추출)
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('AI returned invalid JSON format');
+    
+    const parsed = JSON.parse(jsonMatch[0]);
     res.status(200).json(parsed);
 
   } catch (error) {
+    console.error('API Check Error:', error);
     res.status(500).json({ error: error.message });
   }
 }
