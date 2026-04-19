@@ -57,20 +57,13 @@
   }
   .dial-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 5; background: linear-gradient(to bottom, var(--bg) 0%, transparent 25%, transparent 75%, var(--bg) 100%); }
   #cascade-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; transition: opacity 0.8s ease; }
-  
-  /* 단어가 정가운데서만 떨어지도록 수정 */
-  .cascade-word {
-    position: absolute; width: 100%; text-align: center; left: 0; 
-    font-size: 32px; font-weight: 900; color: var(--navy); opacity: 0;
-    animation: drop linear infinite; text-shadow: 0 4px 12px rgba(0,122,255,0.2);
-  }
+  .cascade-word { position: absolute; width: 100%; text-align: center; left: 0; font-size: 32px; font-weight: 900; color: var(--navy); opacity: 0; animation: drop linear infinite; text-shadow: 0 4px 12px rgba(0,122,255,0.2); }
   @keyframes drop {
     0% { top: -20%; opacity: 0; filter: blur(5px) scale(0.8); }
     30% { opacity: 1; filter: blur(0px) scale(1.1); color: var(--blue); }
     70% { opacity: 1; filter: blur(0px) scale(1.1); color: var(--blue); }
     100% { top: 120%; opacity: 0; filter: blur(5px) scale(0.8); }
   }
-  
   .dial-final { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); font-size: 72px; font-weight: 900; color: var(--navy); letter-spacing: 2px; opacity: 0; z-index: 10; transition: all 0.9s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-shadow: 0 10px 30px rgba(0,122,255,0.25); }
   .dial-final.active { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
@@ -441,9 +434,7 @@ function startListening() {
 function stopListening() { if (recognition) { try { recognition.stop(); } catch(e){} } isListening = false; resetMicBtn(); }
 function resetMicBtn() { document.getElementById('mic-btn').classList.remove('listening'); document.getElementById('mic-btn-txt').textContent = t('micBtnTxt'); }
 
-/* ══════════════════════════════════════════
-   GAME FLOW & ANIMATIONS (다이얼 시간/모션 수정)
-══════════════════════════════════════════ */
+/* GAME FLOW & ANIMATIONS */
 function startCascadeDial() {
   const container = document.getElementById('cascade-container');
   container.innerHTML = ''; container.style.opacity = '1';
@@ -451,7 +442,6 @@ function startCascadeDial() {
 
   const words = ['Ocean', 'Tiger', 'Galaxy', 'Robot', 'Apple', 'Mountain', 'Diamond', 'Castle', 'Piano', 'Dragon', 'Forest', 'Rocket', 'Shadow', 'Eclipse'];
   
-  // 정가운데 슬롯머신처럼 빠르게 떨어지도록 간격 및 속도 조정
   cascadeInterval = setInterval(() => {
     const el = document.createElement('div');
     el.className = 'cascade-word';
@@ -476,13 +466,11 @@ async function startGame() {
   
   startCascadeDial();
 
-  // 1. 다이얼 애니메이션을 3.5초 동안 길게 보여줍니다.
   setTimeout(async () => {
     clearInterval(cascadeInterval);
     document.getElementById('cascade-container').style.opacity = '0';
     document.getElementById('dial-final').classList.add('active');
 
-    // 2. '???' 상태로 1.5초 대기 후 백엔드 통신(생각중) 시작
     setTimeout(async () => {
       showPhase('thinking');
       document.getElementById('thinking-txt').textContent = t('thinkingTxt');
@@ -534,6 +522,7 @@ function sendText() {
   document.getElementById('text-input').value = ''; handleQuestion(val);
 }
 
+// ⚡ 에러 추적기가 포함된 핵심 질문 처리 로직
 async function handleQuestion(question) {
   if (!question.trim() || isAnswering || questionCount >= 20) return;
   isAnswering = true; questionCount++; updateCounter();
@@ -549,7 +538,10 @@ async function handleQuestion(question) {
         body: JSON.stringify({ secretWord, secretCategory, question })
     });
     
-    if (!res.ok) throw new Error(`서버 통신 오류 (${res.status})`);
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `서버 에러 (${res.status})`);
+    }
     
     const parsed = await res.json();
     qaHistory[entryIdx].answer = parsed.answer; 
@@ -562,7 +554,8 @@ async function handleQuestion(question) {
       setTimeout(() => { speakText(`Game over. The answer was ${secretWord}.`); showLose(); }, 1200);
     }
   } catch(e) {
-    qaHistory[entryIdx].answer = '⚠️ 연결에 실패했습니다. 다시 시도해주세요.';
+    // 🔥 실제 오류 내용을 말풍선에 띄워줍니다!
+    qaHistory[entryIdx].answer = `⚠️ 오류: ${e.message}`;
     qaHistory[entryIdx].error = true;
     questionCount--; 
     updateCounter();
