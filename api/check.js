@@ -1,11 +1,12 @@
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
   const { secretWord, secretCategory, question } = req.body;
-  const API_KEY = process.env.ANTHROPIC_API_KEY;
+  
+  const rawKey = process.env.ANTHROPIC_API_KEY || '';
+  const API_KEY = rawKey.replace(/["']/g, '').trim(); // 🛡️ 자동 치유
 
-  // 🛡️ API 키 사전 검사 로직 추가
-  if (!API_KEY || API_KEY.trim() === '') {
-    return res.status(401).json({ error: { message: "Vercel 환경 변수에 ANTHROPIC_API_KEY가 설정되지 않았습니다." }});
+  if (!API_KEY) {
+    return res.status(500).json({ error: "Vercel 환경 변수에 키가 비어있습니다." });
   }
 
   const systemPrompt = `You are a 20 Questions host. Return ONLY valid JSON. 
@@ -21,7 +22,7 @@ JSON Format: {"type":"question","answer":"..."}`;
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': API_KEY.trim(), // 빈칸 강제 제거
+        'x-api-key': API_KEY,
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
@@ -34,7 +35,8 @@ JSON Format: {"type":"question","answer":"..."}`;
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        return res.status(response.status).json({ error: errorData.error?.message || `API Status: ${response.status}` });
+        const keyInfo = `(인식된 키: ${API_KEY.substring(0, 15)}..., 길이: ${API_KEY.length})`;
+        throw new Error(`[${response.status}] ${errorData.error?.message || '인증 실패'} ${keyInfo}`);
     }
 
     const data = await response.json();
