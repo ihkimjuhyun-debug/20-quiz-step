@@ -1,11 +1,16 @@
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
   const { lang } = req.body;
-  const API_KEY = process.env.ANTHROPIC_API_KEY;
+  
+  // 1. 환경 변수 가져오기
+  const rawKey = process.env.ANTHROPIC_API_KEY || '';
+  
+  // 🛡️ [자동 치유 로직] 혹시 실수로 들어간 따옴표(" , ')와 앞뒤 공백을 강제로 파괴
+  const API_KEY = rawKey.replace(/["']/g, '').trim();
 
-  // 🛡️ API 키 사전 검사 로직 추가
-  if (!API_KEY || API_KEY.trim() === '') {
-    return res.status(401).json({ error: { message: "Vercel 환경 변수에 ANTHROPIC_API_KEY가 설정되지 않았습니다." }});
+  // 2. 키가 아예 없는지 검사
+  if (!API_KEY) {
+    return res.status(500).json({ error: "Vercel 환경 변수에 키가 비어있습니다. 등록을 확인해주세요." });
   }
 
   try {
@@ -13,7 +18,7 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': API_KEY.trim(), // 빈칸 강제 제거
+        'x-api-key': API_KEY, // 정제된 키 사용
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
@@ -26,7 +31,9 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        return res.status(response.status).json({ error: errorData.error?.message || `Anthropic API Error: ${response.status}` });
+        // 🔍 [엑스레이 디버깅] 서버가 진짜로 읽고 있는 키의 상태를 에러 메시지에 포함 (보안상 앞 15자리만 표시)
+        const keyInfo = `(인식된 키: ${API_KEY.substring(0, 15)}..., 길이: ${API_KEY.length})`;
+        throw new Error(`[${response.status}] ${errorData.error?.message || '인증 실패'} ${keyInfo}`);
     }
 
     const data = await response.json();
