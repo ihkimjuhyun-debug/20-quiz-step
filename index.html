@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>20 Questions / 스무고개</title>
 <style>
-  /* 기존에 작성하신 CSS 코드를 그대로 유지합니다. (setup-screen 관련 CSS는 남겨두어도 무방합니다) */
   :root {
     --navy: #002D5E; --blue: #007AFF; --red: #FF3B30;
     --green: #34C759; --orange: #FF9500; --yellow: #FFD60A;
@@ -14,7 +13,7 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", sans-serif;
     background: var(--bg); color: var(--text);
     -webkit-font-smoothing: antialiased; min-height: 100vh;
   }
@@ -54,16 +53,18 @@
   }
   .btn-primary:active { transform: scale(0.97); opacity: 0.9; }
   .info-box {
-    background: var(--card); border-radius: 20px; padding: 18px 20px;
+    background: rgba(255,255,255,0.8); border-radius: 20px; padding: 18px 20px;
     width: 100%; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   }
   .info-row { display: flex; gap: 10px; align-items: center; font-size: 14px; font-weight: 600; color: #3A3A3C; }
 
   /* ── TOP BAR ── */
   #top-bar {
     display: none; align-items: center; justify-content: space-between;
-    padding: 13px 16px; background: rgba(255,255,255,0.92);
-    backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--border);
+    padding: 13px 16px; background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border-bottom: 0.5px solid rgba(229,229,234,0.5);
     position: sticky; top: 0; z-index: 100;
   }
   .top-btn-red { padding: 8px 13px; border-radius: 10px; border: none; background: var(--red); color: #fff; font-size: 13px; font-weight: 800; cursor: pointer; }
@@ -79,19 +80,40 @@
     min-height: 85vh; padding: 32px; gap: 20px;
   }
 
-  /* DIAL */
+  /* NEW CASCADE DIAL */
   .dial-outer {
-    width: 220px; height: 260px; background: var(--card); border-radius: 26px;
-    overflow: hidden; box-shadow: 0 12px 44px rgba(0,0,0,0.10);
-    border: 1px solid var(--border); position: relative; display: flex; align-items: center; justify-content: center;
+    width: 260px; height: 300px; border-radius: 32px;
+    background: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.7);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.06);
+    overflow: hidden; position: relative;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   }
-  .dial-highlight {
-    position: absolute; left: 10px; right: 10px; top: 50%; transform: translateY(-50%);
-    height: 50px; background: rgba(0,122,255,0.07); border-radius: 14px; pointer-events: none; z-index: 2;
+  .dial-overlay {
+    position: absolute; inset: 0; pointer-events: none; z-index: 5;
+    background: linear-gradient(to bottom, var(--bg) 0%, transparent 25%, transparent 75%, var(--bg) 100%);
   }
-  .dial-rows { position: absolute; width: 100%; display: flex; flex-direction: column; align-items: center; }
-  .dial-row { height: 52px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; letter-spacing: 6px; color: var(--navy); opacity: 0.25; }
-  .dial-row.mid { font-size: 30px; color: var(--blue); opacity: 1; }
+  #cascade-container {
+    width: 100%; height: 100%; position: absolute; top: 0; left: 0;
+    transition: opacity 0.8s ease;
+  }
+  .cascade-word {
+    position: absolute; font-size: 22px; font-weight: 800;
+    color: var(--navy); white-space: nowrap; opacity: 0;
+    animation: drop linear infinite;
+  }
+  @keyframes drop {
+    0% { top: -15%; opacity: 0; filter: blur(5px) scale(0.85); color: rgba(0,45,94,0.4); }
+    25% { opacity: 0.9; filter: blur(0px) scale(1); color: var(--blue); }
+    75% { opacity: 0.9; filter: blur(0px) scale(1); color: var(--blue); }
+    100% { top: 115%; opacity: 0; filter: blur(5px) scale(0.85); color: rgba(0,45,94,0.4); }
+  }
+  .dial-final {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+    font-size: 72px; font-weight: 900; color: var(--navy); letter-spacing: 2px;
+    opacity: 0; z-index: 10; transition: all 0.9s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-shadow: 0 10px 30px rgba(0,122,255,0.25);
+  }
+  .dial-final.active { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
   /* PLAYING */
   #answer-reveal {
@@ -100,20 +122,17 @@
     align-items: center; gap: 10px;
   }
   .mystery-card {
-    margin: 16px 14px; background: var(--card); border-radius: 26px;
+    margin: 16px 14px; background: rgba(255,255,255,0.85); border-radius: 26px;
     padding: 22px 20px; text-align: center;
-    box-shadow: 0 6px 28px rgba(0,0,0,0.06); border: 1px solid var(--border);
+    box-shadow: 0 6px 28px rgba(0,0,0,0.04); border: 1px solid var(--border);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   }
   .mystery-word { font-size: 50px; font-weight: 900; color: var(--navy); letter-spacing: 18px; text-shadow: 0 4px 24px rgba(0,45,94,0.12); }
   .mystery-sub { font-size: 13px; color: var(--gray); font-weight: 700; margin-top: 6px; }
 
   /* QA Panel */
-  .qa-panel { margin: 0 14px 8px; background: var(--card); border-radius: 22px; border: 1px solid var(--border); overflow: hidden; }
-  .qa-header {
-    width: 100%; padding: 13px 18px; background: none; border: none; cursor: pointer;
-    font-weight: 800; font-size: 14px; color: var(--navy);
-    display: flex; justify-content: space-between; align-items: center;
-  }
+  .qa-panel { margin: 0 14px 8px; background: rgba(255,255,255,0.85); border-radius: 22px; border: 1px solid var(--border); overflow: hidden; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .qa-header { width: 100%; padding: 13px 18px; background: none; border: none; cursor: pointer; font-weight: 800; font-size: 14px; color: var(--navy); display: flex; justify-content: space-between; align-items: center; }
   .qa-list { max-height: 290px; overflow-y: auto; padding: 4px 16px 16px; }
   .qa-pair { margin-bottom: 16px; }
   .q-bubble { background: #F2F2F7; border-radius: 16px 16px 16px 4px; padding: 9px 13px; margin-bottom: 6px; display: flex; gap: 8px; align-items: flex-start; }
@@ -121,70 +140,44 @@
   .q-text { font-size: 14px; font-weight: 600; color: var(--navy); }
   .a-row { display: flex; align-items: flex-start; gap: 8px; margin-left: 16px; }
   .a-bubble { flex: 1; background: #E8F5E9; border-radius: 4px 16px 16px 16px; padding: 9px 13px; font-size: 14px; font-weight: 700; color: #2E7D32; line-height: 1.5; }
+  .a-error { background: #FFE5E5; color: var(--red); }
   .a-loading { margin-left: 16px; background: #F2F2F7; border-radius: 4px 16px 16px 16px; padding: 9px 13px; font-size: 13px; color: var(--gray); font-weight: 600; }
-  .replay-btn {
-    flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px;
-    border: 1px solid var(--border); background: #F8F8FA; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; margin-top: 2px;
-    font-size: 16px; transition: all 0.15s;
-  }
+  .replay-btn { flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border); background: #F8F8FA; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 2px; font-size: 16px; transition: all 0.15s; }
   .replay-btn.playing { background: #FFE5E5; border-color: var(--red); }
 
   /* Input Area */
   #input-area {
-    position: sticky; bottom: 0; background: rgba(242,242,247,0.97);
-    backdrop-filter: blur(24px); border-top: 0.5px solid var(--border);
-    padding: 12px 14px 28px;
+    position: sticky; bottom: 0; background: rgba(242,242,247,0.85);
+    backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+    border-top: 0.5px solid rgba(229,229,234,0.6);
+    padding: 12px 14px 28px; z-index: 100;
   }
   .mic-badge { border-radius: 10px; padding: 7px 12px; font-size: 12px; font-weight: 700; text-align: center; margin-bottom: 8px; }
-  .speak-bar {
-    background: #E3F0FF; border-radius: 12px; padding: 8px 14px;
-    font-size: 13px; font-weight: 800; color: var(--blue);
-    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
-  }
+  .speak-bar { background: #E3F0FF; border-radius: 12px; padding: 8px 14px; font-size: 13px; font-weight: 800; color: var(--blue); display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   .stop-speak-btn { margin-left: auto; background: var(--blue); color: #fff; border: none; border-radius: 8px; padding: 4px 10px; font-size: 12px; font-weight: 800; cursor: pointer; }
-  .live-box {
-    background: #fff; border: 1.5px dashed var(--red); border-radius: 12px;
-    padding: 8px 12px; font-size: 13px; font-weight: 600; color: var(--navy);
-    margin-bottom: 8px; min-height: 36px; display: none;
-  }
+  .live-box { background: rgba(255,255,255,0.9); border: 1.5px dashed var(--red); border-radius: 12px; padding: 8px 12px; font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 8px; min-height: 36px; display: none; }
   .analyzing-bar { background: #EAF3FF; color: var(--blue); border-radius: 12px; padding: 8px 14px; font-size: 13px; font-weight: 800; text-align: center; margin-bottom: 8px; display: none; }
-  .mic-btn {
-    width: 100%; height: 62px; border-radius: 20px; background: var(--navy);
-    color: #fff; border: none; font-size: 15px; font-weight: 800; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    box-shadow: 0 6px 20px rgba(0,45,94,0.2); transition: background 0.2s, box-shadow 0.2s;
-  }
+  .mic-btn { width: 100%; height: 62px; border-radius: 20px; background: var(--navy); color: #fff; border: none; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 6px 20px rgba(0,45,94,0.2); transition: background 0.2s, box-shadow 0.2s; }
   .mic-btn.listening { background: var(--red); box-shadow: 0 6px 24px rgba(255,59,48,0.45); }
   .mic-btn.disabled { opacity: 0.45; cursor: not-allowed; }
   .text-row { display: flex; gap: 8px; margin-top: 10px; }
-  .text-input {
-    flex: 1; height: 46px; border-radius: 14px; border: 1.5px solid var(--border);
-    padding: 0 14px; font-size: 15px; font-weight: 600; outline: none;
-    background: #fff; color: var(--navy); font-family: inherit;
-  }
-  .text-input:focus { border-color: var(--blue); }
-  .send-btn {
-    height: 46px; padding: 0 18px; border-radius: 14px; background: var(--blue);
-    color: #fff; border: none; font-size: 14px; font-weight: 800; cursor: pointer;
-  }
+  .text-input { flex: 1; height: 46px; border-radius: 14px; border: 1.5px solid var(--border); padding: 0 14px; font-size: 15px; font-weight: 600; outline: none; background: #fff; color: var(--navy); font-family: inherit; }
+  .text-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,122,255,0.15); }
+  .send-btn { height: 46px; padding: 0 18px; border-radius: 14px; background: var(--blue); color: #fff; border: none; font-size: 14px; font-weight: 800; cursor: pointer; }
   .hint-text { font-size: 11px; color: #C7C7CC; text-align: center; margin-top: 6px; font-weight: 600; }
 
   /* End screens */
-  .end-screen {
-    display: none; flex-direction: column; align-items: center; justify-content: center;
-    min-height: 100vh; padding: 40px 28px; gap: 18px;
-  }
+  .end-screen { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 40px 28px; gap: 18px; }
   .end-title { font-size: 34px; font-weight: 900; color: #fff; text-align: center; }
   .end-sub { color: rgba(255,255,255,0.75); font-weight: 700; font-size: 15px; text-align: center; }
-  .word-reveal-box { background: rgba(255,255,255,0.15); border-radius: 24px; padding: 20px 36px; text-align: center; width: 100%; max-width: 280px; }
+  .word-reveal-box { background: rgba(255,255,255,0.15); border-radius: 24px; padding: 20px 36px; text-align: center; width: 100%; max-width: 280px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
   .reveal-label { font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 800; }
   .reveal-word { font-size: 40px; font-weight: 900; margin-top: 4px; }
   .stat-row { display: flex; gap: 12px; width: 100%; max-width: 280px; }
-  .stat-box { flex: 1; background: rgba(255,255,255,0.12); border-radius: 18px; padding: 14px 10px; text-align: center; }
+  .stat-box { flex: 1; background: rgba(255,255,255,0.12); border-radius: 18px; padding: 14px 10px; text-align: center; backdrop-filter: blur(10px); }
   .stat-num { font-size: 30px; font-weight: 900; color: #fff; display: block; }
   .stat-label { font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 700; display: block; }
-  .big-btn { width: 100%; max-width: 280px; height: 60px; border-radius: 20px; color: #fff; border: none; font-size: 18px; font-weight: 900; cursor: pointer; margin-top: 8px; }
+  .big-btn { width: 100%; max-width: 280px; height: 60px; border-radius: 20px; background: rgba(255,255,255,0.9); color: var(--navy); border: none; font-size: 18px; font-weight: 900; cursor: pointer; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -229,8 +222,9 @@
   <div class="center-box">
     <p id="dial-label" style="color:var(--gray);font-weight:700;font-size:15px;">AI is choosing a word…</p>
     <div class="dial-outer">
-      <div class="dial-highlight"></div>
-      <div class="dial-rows" id="dial-rows"></div>
+      <div class="dial-overlay"></div>
+      <div id="cascade-container"></div>
+      <div class="dial-final" id="dial-final">???</div>
     </div>
   </div>
 </div>
@@ -244,7 +238,7 @@
 </div>
 
 <div id="phase-play" class="phase">
-  <div id="answer-reveal" style="display:none;background:#FFF9E6;border:1.5px solid var(--yellow);border-radius:14px;margin:10px 14px 0;padding:10px 16px;align-items:center;gap:10px;">
+  <div id="answer-reveal">
     <span id="ans-label" style="font-size:12px;font-weight:800;color:var(--gray)">Answer:</span>
     <span id="ans-word" style="font-size:22px;font-weight:900;color:var(--red)"></span>
   </div>
@@ -263,10 +257,9 @@
   </div>
 
   <div id="input-area">
-    <div id="mic-badge" class="mic-badge" style="background:#F2F2F7;color:var(--gray)">Checking microphone…</div>
+    <div id="mic-badge" class="mic-badge">Checking microphone…</div>
     <div id="speak-bar" class="speak-bar" style="display:none">
-      <span>🔊</span>
-      <span id="speak-bar-txt">Speaking…</span>
+      <span>🔊</span><span id="speak-bar-txt">Speaking…</span>
       <button class="stop-speak-btn" onclick="stopSpeaking()" id="stop-speak-btn">⏹ Stop</button>
     </div>
     <div class="live-box" id="live-box">
@@ -275,14 +268,13 @@
     </div>
     <div class="analyzing-bar" id="analyzing-bar">AI thinking…</div>
     <button class="mic-btn" id="mic-btn" onclick="toggleMic()">
-      <span style="font-size:26px">🎙</span>
-      <span id="mic-btn-txt">Ask a Question (Voice)</span>
+      <span style="font-size:26px">🎙</span><span id="mic-btn-txt">Ask a Question (Voice)</span>
     </button>
     <div class="text-row">
       <input type="text" class="text-input" id="text-input" placeholder="Or type your question here…" onkeydown="if(event.key==='Enter')sendText()">
       <button class="send-btn" onclick="sendText()" id="send-btn">Send</button>
     </div>
-    <p class="hint-text" id="hint-txt">e.g. Is it an animal? · Can you eat it? · Is it a person?</p>
+    <p class="hint-text" id="hint-txt">e.g. Is it an animal? · Can you eat it?</p>
   </div>
 </div>
 
@@ -296,10 +288,10 @@
       <div class="reveal-word" style="color:var(--yellow)" id="win-word"></div>
     </div>
     <div class="stat-row">
-      <div class="stat-box"><span class="stat-num" id="win-used">0</span><span class="stat-label" id="win-used-label">Questions Used</span></div>
+      <div class="stat-box"><span class="stat-num" id="win-used">0</span><span class="stat-label" id="win-used-label">Used</span></div>
       <div class="stat-box"><span class="stat-num" id="win-saved">0</span><span class="stat-label" id="win-saved-label">Saved</span></div>
     </div>
-    <button class="big-btn" style="background:var(--green)" onclick="resetGame()" id="win-replay-btn">Play Again</button>
+    <button class="big-btn" onclick="resetGame()" id="win-replay-btn">Play Again</button>
   </div>
 </div>
 
@@ -308,18 +300,20 @@
     <div style="font-size:88px">😢</div>
     <h1 class="end-title" id="lose-title">Game Over!</h1>
     <p class="end-sub" id="lose-sub">You've used all 20 questions.</p>
-    <div class="word-reveal-box" style="background:rgba(255,255,255,0.08)">
+    <div class="word-reveal-box">
       <div class="reveal-label" id="lose-ans-label" style="color:rgba(255,255,255,0.4)">Answer:</div>
       <div class="reveal-word" style="color:var(--red)" id="lose-word"></div>
     </div>
-    <button class="big-btn" style="background:var(--blue)" onclick="resetGame()" id="lose-replay-btn">Play Again</button>
+    <button class="big-btn" onclick="resetGame()" id="lose-replay-btn">Play Again</button>
   </div>
 </div>
 
 </div><script>
 /* ══════════════════════════════════════════
-   STATE & TRANSLATIONS (유지)
+   STATE & URLS
 ══════════════════════════════════════════ */
+const API_BASE_URL = '/api'; 
+
 let lang = 'en';
 let secretWord = '';
 let secretCategory = '';
@@ -333,11 +327,9 @@ let speakingIdx = null;
 let micStatus = 'checking'; 
 let isListening = false;
 let recognition = null;
-let dialTimer = null;
+let cascadeInterval = null;
 let dotsTimer = null;
 
-// 백엔드 API 주소 (개발 시 localhost, 배포 시 배포된 도메인으로 변경)
-const API_BASE_URL = '/api';
 const TXT = {
   en: {
     dialLabel: 'AI is choosing a word…', thinkingTxt: 'Thinking', thinkingSub: 'AI is locking in the secret word',
@@ -387,9 +379,8 @@ function applyStartLang() {
 }
 
 /* ══════════════════════════════════════════
-   TTS & STT (음성 인식/재생 코드 유지)
+   TTS & STT
 ══════════════════════════════════════════ */
-let utteranceCache = null;
 function getEnglishVoice() {
   const voices = speechSynthesis.getVoices();
   const preferred = ['Samantha','Karen','Moira','Google US English','Alex','Victoria','Daniel','Fiona'];
@@ -411,7 +402,6 @@ function speakText(text, rate = 0.92, onEnd = null) {
   if (voice) utter.voice = voice;
   utter.onend = () => { setIsSpeaking(false, null); if (onEnd) onEnd(); };
   utter.onerror = () => { setIsSpeaking(false, null); };
-  utteranceCache = utter;
   speechSynthesis.speak(utter);
 }
 
@@ -495,7 +485,13 @@ function startListening() {
       const liveTxt = document.getElementById('live-txt').textContent.trim();
       document.getElementById('live-box').style.display = 'none';
       document.getElementById('live-txt').textContent = '';
-      if (liveTxt) setTimeout(() => handleQuestion(liveTxt), 80);
+      
+      // ✅ 자동 전송 방지 및 입력창 포커싱 처리
+      if (liveTxt) {
+        const inputEl = document.getElementById('text-input');
+        inputEl.value = liveTxt;
+        inputEl.focus(); 
+      }
     };
     recognition.start();
   } catch(e) {
@@ -507,22 +503,24 @@ function stopListening() { if (recognition) { try { recognition.stop(); } catch(
 function resetMicBtn() { document.getElementById('mic-btn').classList.remove('listening'); document.getElementById('mic-btn-txt').textContent = t('micBtnTxt'); }
 
 /* ══════════════════════════════════════════
-   GAME FLOW & BACKEND API CALLS
+   GAME FLOW & ANIMATIONS
 ══════════════════════════════════════════ */
-const DIAL_CHARS = ['???','◆◆◆','▲▲▲','●●●','■■■','★★★','◇◇◇'];
-function startDial() {
-  const track = document.getElementById('dial-rows');
-  let frame = 0;
-  dialTimer = setInterval(() => {
-    frame++; track.innerHTML = '';
-    for (let i = 0; i < 5; i++) {
-      const isMid = i === 2;
-      const div = document.createElement('div');
-      div.className = 'dial-row' + (isMid ? ' mid' : '');
-      div.textContent = DIAL_CHARS[(frame + i) % DIAL_CHARS.length];
-      track.appendChild(div);
-    }
-  }, 80);
+function startCascadeDial() {
+  const container = document.getElementById('cascade-container');
+  container.innerHTML = ''; container.style.opacity = '1';
+  document.getElementById('dial-final').classList.remove('active');
+
+  const words = ['Ocean', 'Tiger', 'Galaxy', 'Robot', 'Apple', 'Mountain', 'Diamond', 'Castle', 'Piano', 'Dragon', 'Forest', 'Rocket', 'Shadow', 'Eclipse'];
+  
+  cascadeInterval = setInterval(() => {
+    const el = document.createElement('div');
+    el.className = 'cascade-word';
+    el.textContent = words[Math.floor(Math.random() * words.length)];
+    el.style.left = (15 + Math.random() * 70) + '%';
+    el.style.animationDuration = (0.9 + Math.random() * 1.5) + 's';
+    container.appendChild(el);
+    setTimeout(() => { if (container.contains(el)) el.remove(); }, 2500);
+  }, 120);
 }
 
 function updateCounter() {
@@ -535,22 +533,31 @@ function updateCounter() {
 async function startGame() {
   document.getElementById('start-screen').style.display = 'none';
   showPhase('dial'); document.getElementById('top-bar').style.display = 'none';
-  document.getElementById('dial-label').textContent = t('dialLabel'); startDial();
+  document.getElementById('dial-label').textContent = t('dialLabel'); 
+  startCascadeDial();
 
   setTimeout(async () => {
-    clearInterval(dialTimer); showPhase('thinking');
-    document.getElementById('thinking-txt').textContent = t('thinkingTxt');
-    document.getElementById('thinking-sub').textContent = t('thinkingSub');
+    // 다이얼 페이드아웃 및 '???' 활성화
+    clearInterval(cascadeInterval);
+    document.getElementById('cascade-container').style.opacity = '0';
+    document.getElementById('dial-final').classList.add('active');
 
-    let d = 0;
-    dotsTimer = setInterval(() => { d = (d + 1) % 4; document.getElementById('dots').textContent = '.'.repeat(d + 1); }, 400);
+    setTimeout(() => {
+      showPhase('thinking');
+      document.getElementById('thinking-txt').textContent = t('thinkingTxt');
+      document.getElementById('thinking-sub').textContent = t('thinkingSub');
 
+      let d = 0;
+      dotsTimer = setInterval(() => { d = (d + 1) % 4; document.getElementById('dots').textContent = '.'.repeat(d + 1); }, 400);
+    }, 1000);
+
+    // AI 통신
     try {
-      // ✅ 서버에 API 요청
       const res = await fetch(`${API_BASE_URL}/get-word`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ lang })
       });
+      if (!res.ok) throw new Error('API Error');
       const wordData = await res.json();
       secretWord = wordData.word; secretCategory = wordData.category;
     } catch(e) {
@@ -567,7 +574,7 @@ async function startGame() {
     speakText('Word ready! Start asking your questions!', 1.0);
 
     setTimeout(() => { showPlayPhase(); }, 2500);
-  }, 3200);
+  }, 3500);
 }
 
 function showPlayPhase() {
@@ -592,19 +599,22 @@ async function handleQuestion(question) {
   isAnswering = true; questionCount++; updateCounter();
 
   const entryIdx = qaHistory.length;
-  qaHistory.push({ question, answer: null }); renderQA();
+  qaHistory.push({ question, answer: null, error: false }); renderQA();
 
   document.getElementById('analyzing-bar').style.display = 'block'; setInputEnabled(false);
 
+  // ✅ 무한 로딩 버그 방지를 위한 완벽한 에러 핸들링
   try {
-    // ✅ 서버에 API 요청 (평가)
     const res = await fetch(`${API_BASE_URL}/check`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ secretWord, secretCategory, question })
     });
-    const parsed = await res.json();
     
-    qaHistory[entryIdx].answer = parsed.answer; renderQA();
+    if (!res.ok) throw new Error(`서버 통신 오류 (${res.status})`);
+    
+    const parsed = await res.json();
+    qaHistory[entryIdx].answer = parsed.answer; 
+    
     setTimeout(() => { setIsSpeaking(true, entryIdx); speakText(parsed.answer, 0.92); }, 200);
 
     if (parsed.type === 'guess' && parsed.correct) {
@@ -613,10 +623,16 @@ async function handleQuestion(question) {
       setTimeout(() => { speakText(`Game over. The answer was ${secretWord}.`); showLose(); }, 1200);
     }
   } catch(e) {
-    qaHistory[entryIdx].answer = 'Error: ' + e.message; renderQA();
+    qaHistory[entryIdx].answer = '⚠️ 연결에 실패했습니다. 다시 시도해주세요.';
+    qaHistory[entryIdx].error = true;
+    questionCount--; // 에러 시 카운트 복구
+    updateCounter();
+  } finally {
+    document.getElementById('analyzing-bar').style.display = 'none'; 
+    isAnswering = false; 
+    setInputEnabled(true);
+    renderQA();
   }
-
-  document.getElementById('analyzing-bar').style.display = 'none'; isAnswering = false; setInputEnabled(true);
 }
 
 function setInputEnabled(enabled) { document.getElementById('text-input').disabled = !enabled; document.getElementById('send-btn').disabled = !enabled; }
@@ -636,12 +652,19 @@ function renderQA() {
     pair.appendChild(qBubble);
     if (item.answer != null) {
       const aRow = document.createElement('div'); aRow.className = 'a-row';
-      const aBubble = document.createElement('div'); aBubble.className = 'a-bubble'; aBubble.textContent = item.answer;
-      const replayBtn = document.createElement('button');
-      replayBtn.className = 'replay-btn' + (isSpeaking && speakingIdx === i ? ' playing' : '');
-      replayBtn.textContent = (isSpeaking && speakingIdx === i) ? '⏹' : '🔊';
-      replayBtn.onclick = () => playAnswer(item.answer, i);
-      aRow.appendChild(aBubble); aRow.appendChild(replayBtn); pair.appendChild(aRow);
+      const aBubble = document.createElement('div'); 
+      aBubble.className = 'a-bubble' + (item.error ? ' a-error' : ''); 
+      aBubble.textContent = item.answer;
+      aRow.appendChild(aBubble);
+      
+      if (!item.error) {
+        const replayBtn = document.createElement('button');
+        replayBtn.className = 'replay-btn' + (isSpeaking && speakingIdx === i ? ' playing' : '');
+        replayBtn.textContent = (isSpeaking && speakingIdx === i) ? '⏹' : '🔊';
+        replayBtn.onclick = () => playAnswer(item.answer, i);
+        aRow.appendChild(replayBtn); 
+      }
+      pair.appendChild(aRow);
     } else {
       const loading = document.createElement('div'); loading.className = 'a-loading'; loading.textContent = '⏳ ' + t('analyzingBar'); pair.appendChild(loading);
     }
@@ -656,7 +679,7 @@ function toggleQA() { showQAToggle = !showQAToggle; document.getElementById('qa-
 function showWin() { showPhase('win'); document.getElementById('top-bar').style.display = 'none'; document.getElementById('win-screen').style.display = 'flex'; document.getElementById('win-title').textContent = t('winTitle'); document.getElementById('win-sub').textContent = t('winSub'); document.getElementById('win-ans-label').textContent = t('ansRevealLabel'); document.getElementById('win-word').textContent = secretWord; document.getElementById('win-used').textContent = questionCount; document.getElementById('win-saved').textContent = 20 - questionCount; document.getElementById('win-used-label').textContent = t('winUsedLabel'); document.getElementById('win-saved-label').textContent = t('winSavedLabel'); document.getElementById('win-replay-btn').textContent = t('playAgain'); }
 function showLose() { showPhase('lose'); document.getElementById('top-bar').style.display = 'none'; document.getElementById('lose-screen').style.display = 'flex'; document.getElementById('lose-title').textContent = t('loseTitle'); document.getElementById('lose-sub').textContent = t('loseSub'); document.getElementById('lose-ans-label').textContent = t('ansRevealLabel'); document.getElementById('lose-word').textContent = secretWord; document.getElementById('lose-replay-btn').textContent = t('playAgain'); }
 function resetGame() {
-  speechSynthesis.cancel(); stopListening(); clearInterval(dialTimer); clearInterval(dotsTimer);
+  speechSynthesis.cancel(); stopListening(); clearInterval(cascadeInterval); clearInterval(dotsTimer);
   secretWord = ''; secretCategory = ''; questionCount = 0; qaHistory = [];
   isAnswering = false; showAnswerToggle = false; showQAToggle = true; isSpeaking = false; speakingIdx = null;
   document.getElementById('top-bar').style.display = 'none';
