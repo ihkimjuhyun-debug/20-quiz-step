@@ -3,16 +3,21 @@ export default async function handler(req, res) {
   const { lang } = req.body;
   const API_KEY = process.env.ANTHROPIC_API_KEY;
 
+  // 🛡️ API 키 사전 검사 로직 추가
+  if (!API_KEY || API_KEY.trim() === '') {
+    return res.status(401).json({ error: { message: "Vercel 환경 변수에 ANTHROPIC_API_KEY가 설정되지 않았습니다." }});
+  }
+
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
+        'x-api-key': API_KEY.trim(), // 빈칸 강제 제거
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307', // ⚡ 가장 빠른 모델로 타임아웃 방지
+        model: 'claude-3-haiku-20240307',
         max_tokens: 100,
         system: 'Return raw JSON only. {"word":"...","category":"..."}',
         messages: [{ role: 'user', content: lang === 'ko' ? '랜덤 단어 하나 골라줘.' : 'Pick a random word.' }]
