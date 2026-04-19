@@ -3,15 +3,15 @@ export default async function handler(req, res) {
   const { secretWord, secretCategory, question } = req.body;
   
   const rawKey = process.env.ANTHROPIC_API_KEY || '';
-  const API_KEY = rawKey.replace(/["']/g, '').trim(); // 🛡️ 자동 치유
+  const API_KEY = rawKey.replace(/["']/g, '').trim();
 
   if (!API_KEY) {
-    return res.status(500).json({ error: "Vercel 환경 변수에 키가 비어있습니다." });
+    return res.status(500).json({ error: "[500] Vercel 환경 변수 누락" });
   }
 
   const systemPrompt = `You are a 20 Questions host. Return ONLY valid JSON. 
-Autocorrect STT errors (e.g. "is it double" -> "edible"). 
-Give natural, organic 1-2 sentence answers based on context. No line breaks.`;
+Autocorrect STT phonetic errors (e.g. "is it double" -> "edible"). 
+Give natural, organic 1-2 sentence answers based on context.`;
 
   const userPrompt = `Word: "${secretWord}"
 User: "${question}"
@@ -35,14 +35,12 @@ JSON Format: {"type":"question","answer":"..."}`;
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const keyInfo = `(인식된 키: ${API_KEY.substring(0, 15)}..., 길이: ${API_KEY.length})`;
-        throw new Error(`[${response.status}] ${errorData.error?.message || '인증 실패'} ${keyInfo}`);
+        return res.status(response.status).json({ error: `[${response.status}] Anthropic 거절: ${errorData.error?.message || '인증/잔액 오류'}` });
     }
 
     const data = await response.json();
-    let text = data.content[0].text.trim();
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error("AI 응답 형식이 올바르지 않습니다.");
+    const match = data.content[0].text.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error("JSON 파싱 실패");
     
     res.status(200).json(JSON.parse(match[0]));
   } catch (error) {
