@@ -1,11 +1,9 @@
-// /api/get-word.js
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   const KEY = (process.env.OPENAI_API_KEY ?? '').replace(/["'\r\n\t ]/g, '');
 
   if (!KEY) return res.status(500).json({ error: '[MISSING] OPENAI_API_KEY 환경변수가 없습니다.' });
-  if (!KEY.startsWith('sk-')) return res.status(500).json({ error: `[FORMAT] 키 형식 오류: "${KEY.slice(0,10)}..."` });
 
   const { lang = 'en' } = req.body;
   const prompt = lang === 'ko'
@@ -20,7 +18,7 @@ export default async function handler(req, res) {
         model: 'gpt-4o-mini',
         max_tokens: 80,
         messages: [
-          { role: 'system', content: 'Return ONLY a valid JSON object. No markdown, no extra text.' },
+          { role: 'system', content: 'Return ONLY a valid JSON object. No extra text.' },
           { role: 'user', content: prompt }
         ]
       })
@@ -33,7 +31,7 @@ export default async function handler(req, res) {
     
     const data = await r.json();
     const text = data.choices[0].message.content ?? '';
-    const match = text.match(/\{[^}]+\}/);
+    const match = text.match(/\{[\s\S]*?\}/);
     if (!match) throw new Error('JSON 파싱 실패: ' + text.slice(0,60));
     
     return res.status(200).json(JSON.parse(match[0]));
