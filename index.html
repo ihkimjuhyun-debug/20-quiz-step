@@ -10,28 +10,11 @@
   body { font-family: -apple-system, sans-serif; background: var(--bg); color: #1C1C1E; }
   .app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
   
-  /* --- 요청하신 가독성 CSS 수정 적용 부분 --- */
   .lang-btns { display: flex; gap: 10px; margin-bottom: 20px; }
   .lang-btn { flex: 1; padding: 14px 0; border-radius: 14px; border: 1.5px solid var(--border); background: #F8F8FA; font-size: 14px; font-weight: 800; cursor: pointer; color: var(--gray); transition: all 0.15s; }
-  .lang-btn.active { 
-    color: #1C1C1E; /* 진한 흑회색 */
-    background: rgba(255, 255, 255, 0.9); 
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); 
-    border-color: var(--blue);
-  }
+  .lang-btn.active { color: #1C1C1E; background: rgba(255, 255, 255, 0.9); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); border-color: var(--blue); }
+  .btn-primary { width: 100%; height: 58px; border-radius: 18px; background: var(--navy); color: #ffffff; border: none; font-size: 17px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,45,94,0.28); }
   
-  .btn-primary { 
-    width: 100%; height: 58px; border-radius: 18px; 
-    background: var(--navy); 
-    color: #ffffff; /* 네이비 배경엔 흰 글씨가 가장 잘 보입니다 */
-    border: none; font-size: 17px; font-weight: 900; 
-    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; 
-    box-shadow: 0 8px 24px rgba(0,45,94,0.28); transition: transform 0.1s, opacity 0.1s; 
-  }
-  .btn-primary:active { transform: scale(0.97); opacity: 0.9; }
-  /* ------------------------------------------ */
-
-  /* 잭팟 다이얼 */
   .dial-outer { width: 260px; height: 300px; border-radius: 32px; background: #fff; margin: 20px auto; overflow: hidden; position: relative; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
   #cascade-container { width: 100%; height: 100%; position: absolute; }
   .cascade-word { position: absolute; width: 100%; text-align: center; font-size: 28px; font-weight: 900; color: var(--blue); animation: drop 0.5s linear infinite; }
@@ -39,7 +22,6 @@
   .dial-final { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 60px; font-weight: 900; opacity: 0; transition: 0.5s; }
   .dial-final.active { opacity: 1; }
 
-  /* 말풍선 & 에러 스타일 */
   .qa-list { padding: 20px; flex: 1; overflow-y: auto; }
   .qa-pair { margin-bottom: 15px; }
   .q-bubble { background: #fff; padding: 10px 15px; border-radius: 18px 18px 18px 4px; border: 1px solid var(--border); display: inline-block; font-weight: 600; }
@@ -47,7 +29,6 @@
   .a-bubble { background: #E8F5E9; padding: 10px 15px; border-radius: 4px 18px 18px 18px; color: #2E7D32; font-weight: 700; flex: 1; }
   .a-bubble.error { background: #FFE5E5; color: var(--red); border: 1px solid var(--red); }
   
-  /* 입력창 */
   .input-area { position: sticky; bottom: 0; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); padding: 15px; border-top: 1px solid var(--border); }
   .text-row { display: flex; gap: 8px; }
   input { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border); outline: none; }
@@ -104,7 +85,6 @@
 let lang = 'en';
 let secretWord = '', secretCategory = '', questionCount = 0, qaHistory = [], isAnswering = false;
 
-// 🔥 기존 /api/check 에서 /api/ask 로 변경되었습니다!
 const API_BASE_URL = '/api';
 
 function selectLang(l) {
@@ -147,12 +127,17 @@ function startDialAnimation() {
       }
       const data = await res.json();
       secretWord = data.word; secretCategory = data.category;
+      
+    } catch(e) {
+      // 🔥 [핵심 추가] 에러가 터져도 게임 화면이 강제로 열립니다.
+      alert(`⚠️ 서버 통신 오류로 임시 단어로 게임을 시작합니다.\n\n(오류 원인: ${e.message})\n\nAPI 키 설정이나 크레딧을 다시 확인해주세요.`);
+      secretWord = lang === 'ko' ? "사과" : "apple";
+      secretCategory = lang === 'ko' ? "과일" : "fruit";
+    } finally {
       setTimeout(() => {
         document.getElementById('phase-dial').classList.remove('active');
         document.getElementById('phase-play').classList.add('active');
       }, 1000);
-    } catch(e) {
-      alert("단어 생성 실패: " + e.message + "\n(Vercel 환경변수 세팅을 확인해주세요)");
     }
   }, 3000);
 }
@@ -167,19 +152,13 @@ async function handleQuestion(question) {
   renderQA();
   document.getElementById('analyzing-bar').style.display = 'block';
 
-  // AI에게 이전 문맥을 전달하기 위해 에러가 없는 기록만 필터링
   const validHistory = qaHistory.filter(h => !h.err && h.a).map(h => ({ q: h.q, a: h.a }));
 
   try {
     const res = await fetch(`${API_BASE_URL}/ask`, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ 
-        secretWord, 
-        secretCategory, 
-        question,
-        history: validHistory 
-      })
+      body: JSON.stringify({ secretWord, secretCategory, question, history: validHistory })
     });
 
     if (!res.ok) {
