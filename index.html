@@ -1,216 +1,70 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>20 Questions AI</title>
 <style>
-  :root { --navy: #002D5E; --blue: #007AFF; --red: #FF3B30; --green: #34C759; --bg: #F2F2F7; --border: #E5E5EA; --gray: #8E8E93; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, sans-serif; background: var(--bg); color: #1C1C1E; }
-  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
-  
-  .lang-btns { display: flex; gap: 10px; margin-bottom: 20px; }
-  .lang-btn { flex: 1; padding: 14px 0; border-radius: 14px; border: 1.5px solid var(--border); background: #F8F8FA; font-size: 14px; font-weight: 800; cursor: pointer; color: var(--gray); transition: all 0.15s; }
-  .lang-btn.active { color: #1C1C1E; background: rgba(255, 255, 255, 0.9); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); border-color: var(--blue); }
-  .btn-primary { width: 100%; height: 58px; border-radius: 18px; background: var(--navy); color: #ffffff; border: none; font-size: 17px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,45,94,0.28); }
-  
-  .dial-outer { width: 260px; height: 300px; border-radius: 32px; background: #fff; margin: 20px auto; overflow: hidden; position: relative; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-  #cascade-container { width: 100%; height: 100%; position: absolute; }
-  .cascade-word { position: absolute; width: 100%; text-align: center; font-size: 28px; font-weight: 900; color: var(--blue); animation: drop 0.5s linear infinite; }
-  @keyframes drop { 0% { top: -20%; opacity: 0; } 50% { opacity: 1; } 100% { top: 120%; opacity: 0; } }
-  .dial-final { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 60px; font-weight: 900; opacity: 0; transition: 0.5s; }
-  .dial-final.active { opacity: 1; }
-
-  .qa-list { padding: 20px; flex: 1; overflow-y: auto; }
-  .qa-pair { margin-bottom: 15px; }
-  .q-bubble { background: #fff; padding: 10px 15px; border-radius: 18px 18px 18px 4px; border: 1px solid var(--border); display: inline-block; font-weight: 600; }
-  .a-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 5px; margin-left: 20px; }
-  .a-bubble { background: #E8F5E9; padding: 10px 15px; border-radius: 4px 18px 18px 18px; color: #2E7D32; font-weight: 700; flex: 1; }
-  .a-bubble.error { background: #FFE5E5; color: var(--red); border: 1px solid var(--red); }
-  
-  .input-area { position: sticky; bottom: 0; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); padding: 15px; border-top: 1px solid var(--border); }
-  .text-row { display: flex; gap: 8px; }
-  input { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border); outline: none; }
-  button { padding: 10px 20px; border-radius: 12px; border: none; background: var(--navy); color: #fff; font-weight: 800; cursor: pointer; }
-  .mic-btn { width: 100%; margin-bottom: 10px; height: 50px; border-radius: 15px; background: var(--blue); }
-  
-  #start-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 20px; padding: 0 20px; }
-  .phase { display: none; }
-  .active { display: block; }
+  #debug-console { 
+    position: fixed; top: 0; left: 0; width: 100%; max-height: 40%; 
+    background: rgba(0, 0, 0, 0.95); color: #0f0; font-family: monospace; 
+    font-size: 13px; overflow-y: scroll; z-index: 999999; padding: 15px; 
+    display: none; border-bottom: 3px solid #ff4d4d; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    word-break: break-all;
+  }
+  #debug-console.show { display: block; }
+  .err-msg { color: #ff5555; margin-bottom: 8px; border-bottom: 1px dashed #555; padding-bottom: 8px; font-weight: bold;}
+  .log-msg { color: #aaa; margin-bottom: 4px; font-size: 11px;}
+  .btn-close-debug {
+    position: absolute; top: 10px; right: 10px; background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 5px; font-weight: bold;
+  }
 </style>
-</head>
-<body>
-<div class="app">
-  <div id="start-screen" class="active">
-    <div style="font-size: 60px;">🔮</div>
-    <h1 style="font-size: 32px; font-weight: 900; margin-bottom: 20px;">20 Questions</h1>
-    
-    <div style="width: 100%; max-width: 360px; background: #fff; padding: 20px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-      <div class="lang-btns">
-        <button class="lang-btn active" id="btn-en" onclick="selectLang('en')">🇺🇸 English</button>
-        <button class="lang-btn" id="btn-ko" onclick="selectLang('ko')">🇰🇷 한국어</button>
-      </div>
-      <button class="btn-primary" onclick="startGame()">▶ Start Game</button>
-    </div>
-  </div>
 
-  <div id="phase-dial" class="phase">
-    <div class="center-box" style="text-align: center; padding-top: 100px;">
-      <p style="font-weight: 700; color: var(--gray);">AI가 단어를 고르는 중...</p>
-      <div class="dial-outer">
-        <div id="cascade-container"></div>
-        <div class="dial-final" id="dial-final">???</div>
-      </div>
-    </div>
-  </div>
-
-  <div id="phase-play" class="phase">
-    <div id="top-bar" style="padding: 15px; background: #fff; border-bottom: 1px solid var(--border); text-align: center;">
-      <span id="counter" style="font-size: 20px; font-weight: 900; color: var(--green);">0/20</span>
-    </div>
-    <div class="qa-list" id="qa-list"></div>
-    <div class="input-area">
-      <div id="analyzing-bar" style="text-align: center; font-size: 12px; color: var(--blue); margin-bottom: 5px; display: none;">AI 답변 생성 중...</div>
-      <button class="mic-btn" onclick="toggleMic()" id="mic-btn">🎙 질문하기 (음성)</button>
-      <div class="text-row">
-        <input type="text" id="text-input" placeholder="질문을 입력하세요..." onkeydown="if(event.key==='Enter')sendText()">
-        <button onclick="sendText()">전송</button>
-      </div>
-    </div>
-  </div>
+<div id="debug-console">
+  <button class="btn-close-debug" onclick="document.getElementById('debug-console').classList.remove('show')">닫기</button>
+  <div style="color:yellow; margin-bottom:10px; font-weight:bold;">[디버거 작동 중...] 에러 발생 시 여기에 기록됩니다.</div>
+  <div id="debug-logs"></div>
 </div>
 
 <script>
-let lang = 'en';
-let secretWord = '', secretCategory = '', questionCount = 0, qaHistory = [], isAnswering = false;
+  const dbgWrap = document.getElementById('debug-console');
+  const dbgLogs = document.getElementById('debug-logs');
 
-const API_BASE_URL = '/api';
-
-function selectLang(l) {
-  lang = l;
-  document.getElementById('btn-en').classList.toggle('active', l === 'en');
-  document.getElementById('btn-ko').classList.toggle('active', l === 'ko');
-}
-
-function startGame() {
-  document.getElementById('start-screen').classList.remove('active');
-  document.getElementById('phase-dial').classList.add('active');
-  startDialAnimation();
-}
-
-function startDialAnimation() {
-  const container = document.getElementById('cascade-container');
-  const words = ['Apple','Tiger','Ocean','Pizza','Robot','Smart'];
-  const interval = setInterval(() => {
-    const el = document.createElement('div');
-    el.className = 'cascade-word';
-    el.textContent = words[Math.floor(Math.random()*words.length)];
-    container.appendChild(el);
-    setTimeout(() => el.remove(), 500);
-  }, 100);
-
-  setTimeout(async () => {
-    clearInterval(interval);
-    container.style.display = 'none';
-    document.getElementById('dial-final').classList.add('active');
-    
-    try {
-      const res = await fetch(`${API_BASE_URL}/get-word`, { 
-        method: 'POST', 
-        headers: {'Content-Type':'application/json'}, 
-        body: JSON.stringify({lang}) 
-      });
-      if(!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || res.status);
-      }
-      const data = await res.json();
-      secretWord = data.word; secretCategory = data.category;
-      
-    } catch(e) {
-      // 🔥 [핵심 추가] 에러가 터져도 게임 화면이 강제로 열립니다.
-      alert(`⚠️ 서버 통신 오류로 임시 단어로 게임을 시작합니다.\n\n(오류 원인: ${e.message})\n\nAPI 키 설정이나 크레딧을 다시 확인해주세요.`);
-      secretWord = lang === 'ko' ? "사과" : "apple";
-      secretCategory = lang === 'ko' ? "과일" : "fruit";
-    } finally {
-      setTimeout(() => {
-        document.getElementById('phase-dial').classList.remove('active');
-        document.getElementById('phase-play').classList.add('active');
-      }, 1000);
-    }
-  }, 3000);
-}
-
-async function handleQuestion(question) {
-  if (isAnswering || questionCount >= 20) return;
-  isAnswering = true; questionCount++;
-  document.getElementById('counter').textContent = `${questionCount}/20`;
-  
-  const idx = qaHistory.length;
-  qaHistory.push({ q: question, a: null, err: false });
-  renderQA();
-  document.getElementById('analyzing-bar').style.display = 'block';
-
-  const validHistory = qaHistory.filter(h => !h.err && h.a).map(h => ({ q: h.q, a: h.a }));
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/ask`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ secretWord, secretCategory, question, history: validHistory })
-    });
-
-    if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || `서버 에러 (${res.status})`);
-    }
-
-    const data = await res.json();
-    qaHistory[idx].a = data.answer;
-    
-    if (data.type === 'guess' && data.correct) {
-      setTimeout(() => alert(`정답입니다! 🎉 정답은 [ ${secretWord} ] 였습니다!`), 500);
-    }
-  } catch (e) {
-    qaHistory[idx].a = `⚠️ 오류: ${e.message}`;
-    qaHistory[idx].err = true;
-    questionCount--; 
-  } finally {
-    isAnswering = false;
-    document.getElementById('analyzing-bar').style.display = 'none';
-    renderQA();
+  function printDebug(msg, isErr=false) {
+    dbgWrap.classList.add('show');
+    dbgLogs.innerHTML += `<div class="${isErr ? 'err-msg' : 'log-msg'}">${msg}</div>`;
+    dbgWrap.scrollTop = dbgWrap.scrollHeight;
   }
-}
 
-function renderQA() {
-  const list = document.getElementById('qa-list');
-  list.innerHTML = qaHistory.map((item, i) => `
-    <div class="qa-pair">
-      <div class="q-bubble">Q${i+1}. ${item.q}</div><br>
-      ${item.a ? `<div class="a-row"><div class="a-bubble ${item.err ? 'error' : ''}">${item.a}</div></div>` : ''}
-    </div>
-  `).join('');
-  list.scrollTop = list.scrollHeight;
-}
+  // 1. 치명적인 스크립트 에러 감지 (화면 멈춤의 주원인)
+  window.onerror = function(msg, url, lineNo, columnNo, error) {
+    const errorDetails = error?.stack ? error.stack.replace(/\n/g, '<br>') : '스택 정보 없음';
+    printDebug(`🚨 [치명적 에러]<br>메시지: ${msg}<br>위치: ${lineNo}줄 ${columnNo}칸<br>상세: ${errorDetails}`, true);
+    return false; // 브라우저 기본 에러 처리 유지
+  };
 
-function sendText() {
-  const input = document.getElementById('text-input');
-  if(!input.value.trim()) return;
-  handleQuestion(input.value);
-  input.value = '';
-}
+  // 2. 비동기/Promise(통신 등) 에러 감지
+  window.onunhandledrejection = function(event) {
+    printDebug(`⚠️ [비동기 에러]<br>이유: ${event.reason}`, true);
+  };
 
-function toggleMic() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return alert("지원하지 않는 브라우저입니다.");
-  const recognition = new SR();
-  recognition.lang = lang === 'ko' ? 'ko-KR' : 'en-US';
-  recognition.onstart = () => document.getElementById('mic-btn').textContent = "🔴 듣고 있어요...";
-  recognition.onresult = (e) => handleQuestion(e.results[0][0].transcript);
-  recognition.onend = () => document.getElementById('mic-btn').textContent = "🎙 질문하기 (음성)";
-  recognition.start();
-}
+  // 3. 내가 심어놓은 console.log/error도 화면에 출력하도록 가로채기
+  const originalLog = console.log;
+  const originalError = console.error;
+
+  console.log = function(...args) {
+    printDebug(`[로그] ${args.join(' ')}`);
+    originalLog.apply(console, args);
+  };
+
+  console.error = function(...args) {
+    printDebug(`❌ [콘솔 에러] ${args.join(' ')}`, true);
+    originalError.apply(console, args);
+  };
+
+  // Canvas toDataURL 특수 에러 추적 (보안 에러, 크기 초과 등)
+  const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
+  HTMLCanvasElement.prototype.toDataURL = function(...args) {
+    try {
+      console.log(`캔버스 저장 시도 (크기: ${this.width}x${this.height})`);
+      return originalToDataURL.apply(this, args);
+    } catch (e) {
+      console.error(`캔버스 저장 실패: ${e.message}`);
+      throw e;
+    }
+  };
 </script>
-</body>
-</html>
