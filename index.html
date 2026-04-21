@@ -2,905 +2,236 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>20 Questions / 스무고개</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>20 Questions AI</title>
 <style>
-:root {
-  --navy:#002D5E; --blue:#007AFF; --red:#FF3B30;
-  --green:#34C759; --orange:#FF9500; --yellow:#FFD60A;
-  --bg:#F2F2F7; --card:#fff; --border:#E5E5EA; --gray:#8E8E93;
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;background:var(--bg);color:#1C1C1E;-webkit-font-smoothing:antialiased;}
-.app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;}
+  :root { --navy: #002D5E; --blue: #007AFF; --red: #FF3B30; --green: #34C759; --bg: #F2F2F7; --border: #E5E5EA; --gray: #8E8E93; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, sans-serif; background: var(--bg); color: #1C1C1E; }
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+  
+  /* --- 요청하신 가독성 CSS 수정 적용 부분 --- */
+  .lang-btns { display: flex; gap: 10px; margin-bottom: 20px; }
+  .lang-btn { flex: 1; padding: 14px 0; border-radius: 14px; border: 1.5px solid var(--border); background: #F8F8FA; font-size: 14px; font-weight: 800; cursor: pointer; color: var(--gray); transition: all 0.15s; }
+  .lang-btn.active { 
+    color: #1C1C1E; /* 진한 흑회색 */
+    background: rgba(255, 255, 255, 0.9); 
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); 
+    border-color: var(--blue);
+  }
+  
+  .btn-primary { 
+    width: 100%; height: 58px; border-radius: 18px; 
+    background: var(--navy); 
+    color: #ffffff; /* 네이비 배경엔 흰 글씨가 가장 잘 보입니다 */
+    border: none; font-size: 17px; font-weight: 900; 
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; 
+    box-shadow: 0 8px 24px rgba(0,45,94,0.28); transition: transform 0.1s, opacity 0.1s; 
+  }
+  .btn-primary:active { transform: scale(0.97); opacity: 0.9; }
+  /* ------------------------------------------ */
 
-/* ── 화면 전환 ── */
-.screen{display:none;flex-direction:column;align-items:center;}
-.screen.active{display:flex;}
+  /* 잭팟 다이얼 */
+  .dial-outer { width: 260px; height: 300px; border-radius: 32px; background: #fff; margin: 20px auto; overflow: hidden; position: relative; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+  #cascade-container { width: 100%; height: 100%; position: absolute; }
+  .cascade-word { position: absolute; width: 100%; text-align: center; font-size: 28px; font-weight: 900; color: var(--blue); animation: drop 0.5s linear infinite; }
+  @keyframes drop { 0% { top: -20%; opacity: 0; } 50% { opacity: 1; } 100% { top: 120%; opacity: 0; } }
+  .dial-final { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 60px; font-weight: 900; opacity: 0; transition: 0.5s; }
+  .dial-final.active { opacity: 1; }
 
-/* ══ START SCREEN ══ */
-#s-start{justify-content:center;min-height:100vh;padding:40px 24px;gap:24px;position:relative;}
-.glow{position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(0,122,255,.15) 0%,transparent 70%);pointer-events:none;}
-.big-icon{font-size:80px;filter:drop-shadow(0 8px 24px rgba(0,122,255,.3));}
-.start-title{font-size:42px;font-weight:900;color:var(--navy);letter-spacing:-1.5px;}
-.start-sub{font-size:15px;color:var(--gray);font-weight:600;}
-.lang-card{background:var(--card);border-radius:28px;padding:26px 22px;width:100%;max-width:360px;box-shadow:0 8px 40px rgba(0,0,0,.08);border:1px solid var(--border);}
-.lang-row{display:flex;gap:10px;margin-bottom:18px;}
-.lang-btn{flex:1;height:52px;border-radius:14px;border:1.5px solid var(--border);background:#F8F8FA;font-size:14px;font-weight:800;cursor:pointer;color:var(--gray);transition:all .15s;}
-.lang-btn.on{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 4px 16px rgba(0,122,255,.3);}
-.start-btn{width:100%;height:60px;border-radius:18px;background:var(--navy);color:#fff;border:none;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 24px rgba(0,45,94,.28);}
-.feat-box{background:var(--card);border-radius:20px;padding:18px 20px;width:100%;max-width:360px;border:1px solid var(--border);display:flex;flex-direction:column;gap:10px;}
-.feat-row{display:flex;gap:10px;align-items:center;font-size:14px;font-weight:600;color:#3A3A3C;}
-
-/* ══ DIAL SCREEN ══ */
-#s-dial{justify-content:center;min-height:100vh;gap:20px;}
-.dial-label{color:var(--gray);font-weight:700;font-size:15px;}
-.dial-outer{width:240px;height:280px;border-radius:28px;background:var(--card);overflow:hidden;position:relative;border:1px solid var(--border);box-shadow:0 12px 40px rgba(0,0,0,.08);}
-.dial-track{position:absolute;width:100%;display:flex;flex-direction:column;align-items:center;pointer-events:none;}
-.dial-item{height:56px;display:flex;align-items:center;justify-content:center;font-weight:900;letter-spacing:6px;user-select:none;}
-.dial-hl{position:absolute;left:10px;right:10px;top:50%;transform:translateY(-50%);height:56px;background:rgba(0,122,255,.07);border-radius:12px;pointer-events:none;z-index:2;}
-.thinking-box{text-align:center;padding:20px;}
-
-/* ══ TOP BAR ══ */
-#top-bar{width:100%;display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:rgba(255,255,255,.94);backdrop-filter:blur(20px);border-bottom:.5px solid var(--border);position:sticky;top:0;z-index:100;}
-.tb-btn{padding:8px 13px;border-radius:10px;border:none;font-size:13px;font-weight:800;cursor:pointer;}
-.tb-red{background:var(--red);color:#fff;}
-.tb-blue{background:var(--blue);color:#fff;}
-#counter-wrap{text-align:center;}
-#counter-num{font-size:26px;font-weight:900;line-height:1;transition:color .3s;}
-#counter-lbl{font-size:9px;color:var(--gray);font-weight:700;letter-spacing:.5px;}
-
-/* ══ PLAY SCREEN ══ */
-#s-play{flex-direction:column;min-height:100vh;width:100%;}
-.mystery-card{margin:14px;background:var(--card);border-radius:26px;padding:22px 20px;text-align:center;box-shadow:0 6px 28px rgba(0,0,0,.06);border:1px solid var(--border);}
-.mystery-q{font-size:52px;font-weight:900;color:var(--navy);letter-spacing:20px;}
-.mystery-sub{font-size:13px;color:var(--gray);font-weight:700;margin-top:6px;}
-.ans-reveal{display:none;background:#FFF9E6;border:1.5px solid var(--yellow);border-radius:14px;margin:0 14px;padding:10px 16px;align-items:center;gap:10px;}
-.ans-lbl{font-size:12px;font-weight:800;color:var(--gray);}
-.ans-word{font-size:22px;font-weight:900;color:var(--red);}
-
-/* QA Panel */
-.qa-panel{margin:0 14px 6px;background:var(--card);border-radius:22px;border:1px solid var(--border);overflow:hidden;flex:1;}
-.qa-head{width:100%;padding:13px 18px;background:none;border:none;cursor:pointer;font-weight:800;font-size:14px;color:var(--navy);display:flex;justify-content:space-between;align-items:center;}
-.qa-scroll{max-height:300px;overflow-y:auto;padding:4px 14px 14px;}
-.qa-pair{margin-bottom:14px;}
-.q-bub{background:#F2F2F7;border-radius:16px 16px 16px 4px;padding:9px 13px;display:flex;gap:8px;align-items:flex-start;margin-bottom:5px;}
-.q-badge{background:var(--blue);color:#fff;border-radius:7px;padding:2px 7px;font-size:10px;font-weight:800;flex-shrink:0;margin-top:1px;}
-.q-txt{font-size:14px;font-weight:600;color:var(--navy);line-height:1.4;}
-.a-row{display:flex;align-items:flex-start;gap:7px;margin-left:14px;}
-.a-bub{flex:1;border-radius:4px 16px 16px 16px;padding:9px 13px;font-size:14px;font-weight:700;line-height:1.4;}
-.a-bub.ok{background:#E8F5E9;color:#2E7D32;}
-.a-bub.err{background:#FFF0F0;color:var(--red);border:1px solid #FFCDD2;}
-.a-loading{margin-left:14px;background:#F2F2F7;border-radius:4px 16px 16px 16px;padding:9px 13px;font-size:13px;color:var(--gray);font-weight:600;}
-.replay-btn{flex-shrink:0;width:34px;height:34px;border-radius:10px;border:1px solid var(--border);background:#F8F8FA;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
-.replay-btn.on{background:#FFE5E5;border-color:var(--red);}
-.retry-btn{margin-top:6px;margin-left:14px;padding:5px 12px;border-radius:8px;border:none;background:var(--orange);color:#fff;font-size:12px;font-weight:800;cursor:pointer;}
-
-/* ══ INPUT AREA ══ */
-#input-area{position:sticky;bottom:0;background:rgba(242,242,247,.97);backdrop-filter:blur(20px);border-top:.5px solid var(--border);padding:10px 14px 26px;width:100%;}
-.status-bar{border-radius:10px;padding:7px 12px;font-size:12px;font-weight:700;text-align:center;margin-bottom:8px;}
-.speak-bar{background:#E3F0FF;border-radius:12px;padding:8px 14px;font-size:13px;font-weight:800;color:var(--blue);display:none;align-items:center;gap:8px;margin-bottom:8px;}
-.speak-stop{margin-left:auto;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:800;cursor:pointer;}
-.live-box{background:#fff;border:1.5px dashed var(--red);border-radius:12px;padding:8px 12px;font-size:13px;font-weight:600;color:var(--navy);min-height:34px;display:none;margin-bottom:8px;}
-.ai-bar{background:#EAF3FF;color:var(--blue);border-radius:12px;padding:8px 14px;font-size:13px;font-weight:800;text-align:center;display:none;margin-bottom:8px;}
-.mic-btn{width:100%;height:62px;border-radius:20px;background:var(--navy);color:#fff;border:none;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 6px 20px rgba(0,45,94,.2);transition:background .2s,box-shadow .2s;}
-.mic-btn.rec{background:var(--red);box-shadow:0 6px 24px rgba(255,59,48,.45);}
-.mic-btn:disabled{opacity:.45;cursor:not-allowed;}
-.txt-row{display:flex;gap:8px;margin-top:8px;}
-.txt-inp{flex:1;height:46px;border-radius:14px;border:1.5px solid var(--border);padding:0 14px;font-size:15px;font-weight:600;outline:none;background:#fff;color:var(--navy);font-family:inherit;}
-.txt-inp:focus{border-color:var(--blue);}
-.send-btn{height:46px;padding:0 18px;border-radius:14px;background:var(--blue);color:#fff;border:none;font-size:14px;font-weight:800;cursor:pointer;}
-.send-btn:disabled{opacity:.4;}
-.hint{font-size:11px;color:#C7C7CC;text-align:center;margin-top:5px;font-weight:600;}
-
-/* ══ END SCREENS ══ */
-#s-win,#s-lose{justify-content:center;min-height:100vh;padding:40px 28px;gap:18px;}
-#s-win{background:linear-gradient(155deg,#002D5E 0%,#007AFF 100%);}
-#s-lose{background:linear-gradient(155deg,#1C1C1E 0%,#3A3A3C 100%);}
-.end-icon{font-size:88px;margin-bottom:4px;}
-.end-title{font-size:34px;font-weight:900;color:#fff;text-align:center;}
-.end-sub{color:rgba(255,255,255,.75);font-weight:700;font-size:15px;text-align:center;}
-.word-box{background:rgba(255,255,255,.15);border-radius:22px;padding:18px 32px;text-align:center;}
-.word-lbl{font-size:12px;color:rgba(255,255,255,.5);font-weight:800;}
-.word-val{font-size:40px;font-weight:900;margin-top:4px;}
-.stat-row{display:flex;gap:12px;width:100%;max-width:280px;}
-.stat-box{flex:1;background:rgba(255,255,255,.12);border-radius:16px;padding:14px 10px;text-align:center;}
-.stat-n{font-size:30px;font-weight:900;color:#fff;display:block;}
-.stat-l{font-size:11px;color:rgba(255,255,255,.5);font-weight:700;display:block;}
-.again-btn{width:100%;max-width:280px;height:60px;border-radius:20px;color:#fff;border:none;font-size:18px;font-weight:900;cursor:pointer;margin-top:6px;}
+  /* 말풍선 & 에러 스타일 */
+  .qa-list { padding: 20px; flex: 1; overflow-y: auto; }
+  .qa-pair { margin-bottom: 15px; }
+  .q-bubble { background: #fff; padding: 10px 15px; border-radius: 18px 18px 18px 4px; border: 1px solid var(--border); display: inline-block; font-weight: 600; }
+  .a-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 5px; margin-left: 20px; }
+  .a-bubble { background: #E8F5E9; padding: 10px 15px; border-radius: 4px 18px 18px 18px; color: #2E7D32; font-weight: 700; flex: 1; }
+  .a-bubble.error { background: #FFE5E5; color: var(--red); border: 1px solid var(--red); }
+  
+  /* 입력창 */
+  .input-area { position: sticky; bottom: 0; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); padding: 15px; border-top: 1px solid var(--border); }
+  .text-row { display: flex; gap: 8px; }
+  input { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border); outline: none; }
+  button { padding: 10px 20px; border-radius: 12px; border: none; background: var(--navy); color: #fff; font-weight: 800; cursor: pointer; }
+  .mic-btn { width: 100%; margin-bottom: 10px; height: 50px; border-radius: 15px; background: var(--blue); }
+  
+  #start-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 20px; padding: 0 20px; }
+  .phase { display: none; }
+  .active { display: block; }
 </style>
 </head>
 <body>
 <div class="app">
-
-<!-- ══ START ══ -->
-<div id="s-start" class="screen active">
-  <div class="glow"></div>
-  <div class="big-icon">🔮</div>
-  <div style="text-align:center">
-    <h1 class="start-title" id="t-title">20 Questions</h1>
-    <p class="start-sub" id="t-sub">AI Word Guessing Game</p>
-  </div>
-  <div class="lang-card">
-    <p style="font-size:12px;font-weight:800;color:var(--gray);text-align:center;margin-bottom:12px;letter-spacing:.5px">CHOOSE LANGUAGE · 언어 선택</p>
-    <div class="lang-row">
-      <button class="lang-btn on" id="btn-en" onclick="setLang('en')">🇺🇸 English</button>
-      <button class="lang-btn"   id="btn-ko" onclick="setLang('ko')">🇰🇷 한국어</button>
+  <div id="start-screen" class="active">
+    <div style="font-size: 60px;">🔮</div>
+    <h1 style="font-size: 32px; font-weight: 900; margin-bottom: 20px;">20 Questions</h1>
+    
+    <div style="width: 100%; max-width: 360px; background: #fff; padding: 20px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+      <div class="lang-btns">
+        <button class="lang-btn active" id="btn-en" onclick="selectLang('en')">🇺🇸 English</button>
+        <button class="lang-btn" id="btn-ko" onclick="selectLang('ko')">🇰🇷 한국어</button>
+      </div>
+      <button class="btn-primary" onclick="startGame()">▶ Start Game</button>
     </div>
-    <button class="start-btn" onclick="startGame()">
-      <span style="font-size:22px">▶</span>
-      <span id="t-start-btn">Start Game</span>
-    </button>
   </div>
-  <div class="feat-box" style="max-width:360px">
-    <div class="feat-row"><span>🎙</span><span id="t-f1">Voice or text input</span></div>
-    <div class="feat-row"><span>🔊</span><span id="t-f2">AI answers spoken aloud</span></div>
-    <div class="feat-row"><span>🔄</span><span id="t-f3">Replay any answer</span></div>
-    <div class="feat-row"><span>🏆</span><span id="t-f4">Guess within 20 questions!</span></div>
-  </div>
-</div>
 
-<!-- ══ DIAL ══ -->
-<div id="s-dial" class="screen">
-  <p class="dial-label" id="t-dial-lbl">AI is choosing a word…</p>
-  <div class="dial-outer">
-    <div class="dial-hl"></div>
-    <div class="dial-track" id="dial-track"></div>
-  </div>
-</div>
-
-<!-- ══ THINKING ══ -->
-<div id="s-think" class="screen">
-  <div class="thinking-box" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;" id="think-inner">
-    <div style="font-size:72px">🤔</div>
-    <h2 style="font-size:28px;font-weight:900;color:var(--navy)" id="t-think">Thinking<span id="dots">...</span></h2>
-    <p style="color:var(--gray);font-weight:600;font-size:14px" id="t-think-sub">AI is locking in the secret word</p>
-  </div>
-</div>
-
-<!-- ══ PLAYING ══ -->
-<div id="s-play" class="screen">
-  <div id="top-bar">
-    <button class="tb-btn tb-red" onclick="endGame()" id="t-end">End</button>
-    <div id="counter-wrap">
-      <div id="counter-num" style="color:var(--green)">0<span style="font-size:12px;color:var(--gray);font-weight:700">/20</span></div>
-      <div id="counter-lbl">QUESTIONS</div>
+  <div id="phase-dial" class="phase">
+    <div class="center-box" style="text-align: center; padding-top: 100px;">
+      <p style="font-weight: 700; color: var(--gray);">AI가 단어를 고르는 중...</p>
+      <div class="dial-outer">
+        <div id="cascade-container"></div>
+        <div class="dial-final" id="dial-final">???</div>
+      </div>
     </div>
-    <button class="tb-btn tb-blue" onclick="toggleReveal()" id="t-show-ans">Show Answer</button>
   </div>
 
-  <div class="ans-reveal" id="ans-reveal">
-    <span class="ans-lbl" id="t-ans-lbl">Answer:</span>
-    <span class="ans-word" id="ans-word"></span>
-  </div>
-
-  <div class="mystery-card">
-    <div class="mystery-q">???</div>
-    <div class="mystery-sub" id="t-mys-sub">What's the secret word?</div>
-  </div>
-
-  <div class="qa-panel" id="qa-panel" style="display:none;">
-    <button class="qa-head" onclick="toggleQA()">
-      <span id="qa-title">💬 Q&amp;A History (0)</span>
-      <span id="qa-icon">▲</span>
-    </button>
-    <div class="qa-scroll" id="qa-list"></div>
-  </div>
-
-  <div id="input-area">
-    <div id="status-bar" class="status-bar" style="background:#F2F2F7;color:var(--gray)">Checking microphone…</div>
-    <div class="speak-bar" id="speak-bar">
-      <span>🔊</span><span id="t-speak">Speaking…</span>
-      <button class="speak-stop" onclick="stopTTS()" id="t-stop">⏹ Stop</button>
+  <div id="phase-play" class="phase">
+    <div id="top-bar" style="padding: 15px; background: #fff; border-bottom: 1px solid var(--border); text-align: center;">
+      <span id="counter" style="font-size: 20px; font-weight: 900; color: var(--green);">0/20</span>
     </div>
-    <div class="live-box" id="live-box">
-      <span style="font-size:10px;color:var(--red);font-weight:800;margin-right:6px">● LIVE</span>
-      <span id="live-txt"></span>
+    <div class="qa-list" id="qa-list"></div>
+    <div class="input-area">
+      <div id="analyzing-bar" style="text-align: center; font-size: 12px; color: var(--blue); margin-bottom: 5px; display: none;">AI 답변 생성 중...</div>
+      <button class="mic-btn" onclick="toggleMic()" id="mic-btn">🎙 질문하기 (음성)</button>
+      <div class="text-row">
+        <input type="text" id="text-input" placeholder="질문을 입력하세요..." onkeydown="if(event.key==='Enter')sendText()">
+        <button onclick="sendText()">전송</button>
+      </div>
     </div>
-    <div class="ai-bar" id="ai-bar">AI thinking…</div>
-    <button class="mic-btn" id="mic-btn" onclick="toggleMic()">
-      <span style="font-size:24px" id="mic-icon">🎙</span>
-      <span id="mic-txt">Ask a Question (Voice)</span>
-    </button>
-    <div class="txt-row">
-      <input class="txt-inp" id="txt-inp" placeholder="Or type your question here…" onkeydown="if(event.key==='Enter')sendText()">
-      <button class="send-btn" id="send-btn" onclick="sendText()">Send</button>
-    </div>
-    <p class="hint" id="t-hint">e.g. Is it an animal? · Can you eat it? · Is it a person?</p>
   </div>
 </div>
-
-<!-- ══ WIN ══ -->
-<div id="s-win" class="screen">
-  <div class="end-icon" style="filter:drop-shadow(0 8px 24px rgba(0,0,0,.3))">🎉</div>
-  <h1 class="end-title" id="t-win-title">Correct!</h1>
-  <p class="end-sub" id="t-win-sub">You guessed it!</p>
-  <div class="word-box">
-    <div class="word-lbl" id="t-ans-l2">Answer:</div>
-    <div class="word-val" style="color:var(--yellow)" id="win-word"></div>
-  </div>
-  <div class="stat-row">
-    <div class="stat-box"><span class="stat-n" id="st-used">0</span><span class="stat-l" id="t-used">Used</span></div>
-    <div class="stat-box"><span class="stat-n" id="st-saved">0</span><span class="stat-l" id="t-saved">Saved</span></div>
-  </div>
-  <button class="again-btn" style="background:var(--green)" onclick="resetGame()" id="t-again1">Play Again</button>
-</div>
-
-<!-- ══ LOSE ══ -->
-<div id="s-lose" class="screen">
-  <div class="end-icon">😢</div>
-  <h1 class="end-title" id="t-lose-title">Game Over!</h1>
-  <p class="end-sub" id="t-lose-sub">You used all 20 questions.</p>
-  <div class="word-box" style="background:rgba(255,255,255,.08)">
-    <div class="word-lbl" style="color:rgba(255,255,255,.4)" id="t-ans-l3">Answer:</div>
-    <div class="word-val" style="color:var(--red)" id="lose-word"></div>
-  </div>
-  <button class="again-btn" style="background:var(--blue)" onclick="resetGame()" id="t-again2">Play Again</button>
-</div>
-
-</div><!-- .app -->
 
 <script>
-/* ════════════════════════════════════════════════════════
-   STATE
-════════════════════════════════════════════════════════ */
 let lang = 'en';
-let secretWord = '', secretCategory = '';
-let questionCount = 0;
-let qaHistory = [];         // [{q, a, err, id}]
-let isAnswering = false;    // AI 호출 중 잠금
-let showReveal = false;
-let showQA = true;
+let secretWord = '', secretCategory = '', questionCount = 0, qaHistory = [], isAnswering = false;
 
-/* ════════════════════════════════════════════════════════
-   TTS 상태 (Web Speech Synthesis — API 키 불필요)
-════════════════════════════════════════════════════════ */
-let ttsActive = false;
-let ttsPlayingIdx = null;
+// 🔥 기존 /api/check 에서 /api/ask 로 변경되었습니다!
+const API_BASE_URL = '/api';
 
-/* ════════════════════════════════════════════════════════
-   STT 상태 — 핵심 버그 수정 영역
-   문제: 매 호출마다 new SpeechRecognition() 생성 → 인스턴스 중복
-   해결: 싱글턴 패턴 + 상태 머신으로 전환 충돌 제거
-════════════════════════════════════════════════════════ */
-let rec = null;             // 싱글턴 SpeechRecognition 인스턴스
-let sttState = 'idle';      // idle | starting | listening | stopping
-let pendingTranscript = ''; // onresult에서 모은 텍스트
-
-/* ════════════════════════════════════════════════════════
-   번역
-════════════════════════════════════════════════════════ */
-const TX = {
-  en:{
-    title:'20 Questions',sub:'AI Word Guessing Game',startBtn:'Start Game',
-    f1:'Voice or text input',f2:'AI answers spoken aloud',f3:'Replay any answer',f4:'Guess within 20 questions!',
-    dialLbl:'AI is choosing a word…',thinkTxt:'Thinking',thinkSub:'AI is locking in the secret word',
-    wordReady:'Word Ready!',wordReadySub:'Start asking your questions!',
-    endBtn:'End',showAns:'Show Answer',ansLbl:'Answer:',cntLbl:'QUESTIONS',
-    mysSub:"What's the secret word?",
-    micCheck:'Checking microphone…',micReady:'✅ Microphone ready — tap to ask',
-    micDenied:'🚫 Mic denied — please type below',micNoDevice:'🎙 No mic — please type below',
-    micNoSupport:'⚠️ Voice not supported (Chrome) — type below',
-    micFileProto:'⚠️ Need http://localhost for mic — type below',
-    micListening:'🔴 Listening… tap to stop',micBtnTxt:'Ask a Question (Voice)',
-    speakTxt:'🔊 Speaking…',stopTxt:'⏹ Stop',aiBartxt:'AI thinking…',
-    inpPlaceholder:'Or type your question here…',sendTxt:'Send',
-    hintTxt:'e.g. Is it an animal? · Can you eat it? · Is it a person?',
-    qaTitle:'💬 Q&A History',
-    retryBtn:'Retry',
-    winTitle:'Correct! 🎉',winSub:'You guessed it!',ansLbl2:'Answer:',
-    usedLbl:'Questions Used',savedLbl:'Saved',againBtn:'Play Again',
-    loseTitle:'Game Over! 😢',loseSub:'You used all 20 questions.',
-  },
-  ko:{
-    title:'스무고개',sub:'AI와 함께하는 단어 맞추기',startBtn:'게임 시작',
-    f1:'음성 또는 텍스트로 질문',f2:'AI 답변은 영어 음성으로',f3:'다시 듣기 버튼 제공',f4:'20번 안에 맞춰보세요!',
-    dialLbl:'AI가 단어를 고르는 중…',thinkTxt:'생각중',thinkSub:'AI가 단어를 정하고 있어요',
-    wordReady:'단어 생각 완료!',wordReadySub:'이제 질문을 시작하세요!',
-    endBtn:'종료',showAns:'정답 보기',ansLbl:'정답:',cntLbl:'질문 횟수',
-    mysSub:'이 단어를 맞춰보세요!',
-    micCheck:'마이크 확인 중…',micReady:'✅ 마이크 준비 완료',
-    micDenied:'🚫 마이크 권한 거부 — 텍스트 입력하세요',micNoDevice:'🎙 마이크 없음 — 텍스트 입력하세요',
-    micNoSupport:'⚠️ 이 브라우저 미지원 (Chrome 권장)',
-    micFileProto:'⚠️ 마이크는 localhost에서만 동작',
-    micListening:'🔴 듣는 중… 탭하여 중지',micBtnTxt:'🎙 질문하기 (음성)',
-    speakTxt:'🔊 음성 재생 중',stopTxt:'⏹ 정지',aiBartxt:'AI 답변 중…',
-    inpPlaceholder:'또는 여기에 질문을 입력…',sendTxt:'전송',
-    hintTxt:'예: Is it an animal? · Can you eat it? · Is it famous?',
-    qaTitle:'💬 질문 기록',
-    retryBtn:'재시도',
-    winTitle:'정답입니다! 🎉',winSub:'축하합니다! 단어를 맞추셨어요!',ansLbl2:'정답:',
-    usedLbl:'사용한 질문',savedLbl:'남은 질문',againBtn:'다시 하기',
-    loseTitle:'아쉽네요! 😢',loseSub:'20개 질문을 모두 사용했습니다.',
-  }
-};
-const T = k => (TX[lang]||TX.en)[k] || TX.en[k] || k;
-
-/* ════════════════════════════════════════════════════════
-   언어 선택
-════════════════════════════════════════════════════════ */
-function setLang(l) {
+function selectLang(l) {
   lang = l;
-  document.getElementById('btn-en').classList.toggle('on', l==='en');
-  document.getElementById('btn-ko').classList.toggle('on', l==='ko');
-  applyStartTexts();
-}
-function applyStartTexts() {
-  document.getElementById('t-title').textContent    = T('title');
-  document.getElementById('t-sub').textContent      = T('sub');
-  document.getElementById('t-start-btn').textContent= T('startBtn');
-  document.getElementById('t-f1').textContent       = T('f1');
-  document.getElementById('t-f2').textContent       = T('f2');
-  document.getElementById('t-f3').textContent       = T('f3');
-  document.getElementById('t-f4').textContent       = T('f4');
-}
-function applyPlayTexts() {
-  document.getElementById('t-end').textContent     = T('endBtn');
-  document.getElementById('t-show-ans').textContent= T('showAns');
-  document.getElementById('t-ans-lbl').textContent = T('ansLbl');
-  document.getElementById('counter-lbl').textContent=T('cntLbl');
-  document.getElementById('t-mys-sub').textContent = T('mysSub');
-  document.getElementById('mic-txt').textContent   = T('micBtnTxt');
-  document.getElementById('txt-inp').placeholder   = T('inpPlaceholder');
-  document.getElementById('send-btn').textContent  = T('sendTxt');
-  document.getElementById('t-hint').textContent    = T('hintTxt');
-  document.getElementById('ai-bar').textContent    = T('aiBartxt');
-  document.getElementById('t-speak').textContent   = T('speakTxt');
-  document.getElementById('t-stop').textContent    = T('stopTxt');
-}
-function applyEndTexts(win) {
-  if (win) {
-    document.getElementById('t-win-title').textContent = T('winTitle');
-    document.getElementById('t-win-sub').textContent   = T('winSub');
-    document.getElementById('t-ans-l2').textContent    = T('ansLbl2');
-    document.getElementById('win-word').textContent    = secretWord;
-    document.getElementById('st-used').textContent     = questionCount;
-    document.getElementById('st-saved').textContent    = 20 - questionCount;
-    document.getElementById('t-used').textContent      = T('usedLbl');
-    document.getElementById('t-saved').textContent     = T('savedLbl');
-    document.getElementById('t-again1').textContent    = T('againBtn');
-  } else {
-    document.getElementById('t-lose-title').textContent= T('loseTitle');
-    document.getElementById('t-lose-sub').textContent  = T('loseSub');
-    document.getElementById('t-ans-l3').textContent    = T('ansLbl2');
-    document.getElementById('lose-word').textContent   = secretWord;
-    document.getElementById('t-again2').textContent    = T('againBtn');
-  }
+  document.getElementById('btn-en').classList.toggle('active', l === 'en');
+  document.getElementById('btn-ko').classList.toggle('active', l === 'ko');
 }
 
-/* ════════════════════════════════════════════════════════
-   화면 전환
-════════════════════════════════════════════════════════ */
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+function startGame() {
+  document.getElementById('start-screen').classList.remove('active');
+  document.getElementById('phase-dial').classList.add('active');
+  startDialAnimation();
 }
 
-/* ════════════════════════════════════════════════════════
-   TTS — Web Speech Synthesis (API 키 불필요)
-   ✅ 영어 목소리 자동 선택
-   ✅ STT 시작 전 반드시 TTS 정지 (피드백 루프 방지)
-════════════════════════════════════════════════════════ */
-(() => {
-  if (!('speechSynthesis' in window)) return;
-  speechSynthesis.getVoices();
-  speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
-})();
+function startDialAnimation() {
+  const container = document.getElementById('cascade-container');
+  const words = ['Apple','Tiger','Ocean','Pizza','Robot','Smart'];
+  const interval = setInterval(() => {
+    const el = document.createElement('div');
+    el.className = 'cascade-word';
+    el.textContent = words[Math.floor(Math.random()*words.length)];
+    container.appendChild(el);
+    setTimeout(() => el.remove(), 500);
+  }, 100);
 
-function getEngVoice() {
-  const voices = speechSynthesis.getVoices();
-  const preferred = ['Samantha','Karen','Moira','Google US English','Alex','Daniel','Victoria'];
-  return voices.find(v => preferred.some(p => v.name.includes(p)) && v.lang.startsWith('en'))
-      || voices.find(v => v.lang.startsWith('en-US'))
-      || voices.find(v => v.lang.startsWith('en'))
-      || null;
-}
-
-function tts(text, rate = 0.9) {
-  if (!('speechSynthesis' in window)) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'en-US'; u.rate = rate; u.pitch = 1.05; u.volume = 1;
-  const v = getEngVoice(); if (v) u.voice = v;
-  u.onend   = () => { ttsActive = false; ttsPlayingIdx = null; updateSpeakBar(false); };
-  u.onerror = () => { ttsActive = false; ttsPlayingIdx = null; updateSpeakBar(false); };
-  ttsActive = true;
-  speechSynthesis.speak(u);
-}
-
-function stopTTS() {
-  speechSynthesis.cancel();
-  ttsActive = false; ttsPlayingIdx = null;
-  updateSpeakBar(false);
-}
-
-function updateSpeakBar(on) {
-  document.getElementById('speak-bar').style.display = on ? 'flex' : 'none';
-  // 재생 버튼 상태 동기화
-  document.querySelectorAll('.replay-btn').forEach((btn, i) => {
-    const playing = on && i === ttsPlayingIdx;
-    btn.classList.toggle('on', playing);
-    btn.textContent = playing ? '⏹' : '🔊';
-  });
-}
-
-function playAnswer(text, idx) {
-  if (ttsActive && ttsPlayingIdx === idx) { stopTTS(); return; }
-  stopTTS();
-  ttsPlayingIdx = idx;
-  ttsActive = true;
-  updateSpeakBar(true);
-  tts(text);
-}
-
-/* ════════════════════════════════════════════════════════
-   STT — 버그 수정 핵심
-   
-   이전 문제:
-   - 매번 new SpeechRecognition() → 이전 인스턴스와 충돌
-   - 상태 없이 start() 중복 호출 → 브라우저가 abort/error 반복
-   - onresult에서 바로 handleQuestion → recognition이 아직 살아있어 연속 호출
-   - TTS 재생 중 STT 시작 → 스피커 소리 인식 (피드백 루프)
-   
-   해결:
-   1. 싱글턴: rec 변수에 하나만 유지, 재사용
-   2. 상태 머신: idle → starting → listening → stopping → idle
-   3. TTS/STT 상호 배타적 잠금 (mutex)
-   4. onresult는 임시 저장, onend에서만 handleQuestion 호출
-   5. 오류 시 abort() + 재생성 (일부 브라우저는 error 후 재사용 불가)
-════════════════════════════════════════════════════════ */
-let micStatus = 'checking'; // checking|ready|denied|no_device|no_support|file_proto
-
-async function diagnoseMic() {
-  setMicStatus('checking');
-  if (location.protocol === 'file:') { setMicStatus('file_proto'); return; }
-  if (!window.SpeechRecognition && !window.webkitSpeechRecognition) { setMicStatus('no_support'); return; }
-  if (!navigator.mediaDevices?.getUserMedia) { setMicStatus('no_support'); return; }
-  try {
-    const s = await navigator.mediaDevices.getUserMedia({ audio: true });
-    s.getTracks().forEach(t => t.stop());
-    setMicStatus('ready');
-  } catch (e) {
-    const name = e.name || '';
-    if (name.includes('NotAllowed') || name.includes('PermissionDenied')) setMicStatus('denied');
-    else if (name.includes('NotFound')) setMicStatus('no_device');
-    else setMicStatus('no_support');
-  }
-}
-
-function setMicStatus(s) {
-  micStatus = s;
-  const bar = document.getElementById('status-bar');
-  const btn = document.getElementById('mic-btn');
-  const map = {
-    checking:   ['#F2F2F7','#8E8E93','micCheck'],
-    ready:      ['#E8F5E9','#2E7D32','micReady'],
-    denied:     ['#FFF0F0','#FF3B30','micDenied'],
-    no_device:  ['#FFF0F0','#FF3B30','micNoDevice'],
-    no_support: ['#FFF9E6','#FF9500','micNoSupport'],
-    file_proto: ['#FFF9E6','#FF9500','micFileProto'],
-  };
-  const [bg, col, key] = map[s] || map.checking;
-  bar.style.background = bg; bar.style.color = col; bar.textContent = T(key);
-  btn.disabled = ['no_support','file_proto'].includes(s);
-}
-
-function buildRec() {
-  // 기존 인스턴스 완전 정리 후 새 인스턴스 생성
-  if (rec) {
-    rec.onstart = rec.onresult = rec.onerror = rec.onend = null;
-    try { rec.abort(); } catch(e) {}
-    rec = null;
-  }
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return null;
-  const r = new SR();
-  r.lang = lang === 'ko' ? 'ko-KR' : 'en-US';
-  r.continuous = false;
-  r.interimResults = true;
-  r.maxAlternatives = 1;
-  return r;
-}
-
-function toggleMic() {
-  if (['no_support','file_proto'].includes(micStatus)) return;
-  if (isAnswering) return; // AI 처리 중엔 마이크 차단
-
-  if (sttState === 'listening' || sttState === 'starting') {
-    // 이미 켜져 있으면 → 중지
-    sttState = 'stopping';
-    try { rec && rec.stop(); } catch(e) {}
-    return;
-  }
-
-  if (sttState !== 'idle') return; // starting/stopping 전환 중 중복 방지
-
-  // ✅ TTS/STT 상호 배타: 음성 재생 중이면 먼저 정지
-  if (ttsActive) {
-    stopTTS();
-    // TTS cancel이 비동기이므로 짧은 딜레이 후 STT 시작
-    setTimeout(() => _startSTT(), 200);
-  } else {
-    _startSTT();
-  }
-}
-
-function _startSTT() {
-  if (sttState !== 'idle') return; // 이중 실행 방지
-  sttState = 'starting';
-  pendingTranscript = '';
-
-  rec = buildRec();
-  if (!rec) { sttState = 'idle'; setMicStatus('no_support'); return; }
-
-  rec.onstart = () => {
-    sttState = 'listening';
-    document.getElementById('mic-btn').classList.add('rec');
-    document.getElementById('mic-txt').textContent = T('micListening');
-    document.getElementById('mic-icon').textContent = '⏹';
-  };
-
-  rec.onresult = (e) => {
-    // 중간 결과 포함해서 누적 — 최종 확정 텍스트만 저장
-    let final = '', interim = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (e.results[i].isFinal) final += e.results[i][0].transcript;
-      else interim += e.results[i][0].transcript;
+  setTimeout(async () => {
+    clearInterval(interval);
+    container.style.display = 'none';
+    document.getElementById('dial-final').classList.add('active');
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/get-word`, { 
+        method: 'POST', 
+        headers: {'Content-Type':'application/json'}, 
+        body: JSON.stringify({lang}) 
+      });
+      if(!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || res.status);
+      }
+      const data = await res.json();
+      secretWord = data.word; secretCategory = data.category;
+      setTimeout(() => {
+        document.getElementById('phase-dial').classList.remove('active');
+        document.getElementById('phase-play').classList.add('active');
+      }, 1000);
+    } catch(e) {
+      alert("단어 생성 실패: " + e.message + "\n(Vercel 환경변수 세팅을 확인해주세요)");
     }
-    pendingTranscript = final || interim;
-    // LIVE 프리뷰
-    const lb = document.getElementById('live-box');
-    document.getElementById('live-txt').textContent = pendingTranscript;
-    lb.style.display = pendingTranscript ? 'block' : 'none';
-  };
-
-  rec.onerror = (e) => {
-    // 'no-speech': 말이 없었음 → 조용히 무시
-    // 'aborted': 우리가 직접 abort → 무시
-    // 그 외 실제 오류만 처리
-    if (e.error !== 'no-speech' && e.error !== 'aborted') {
-      if (e.error === 'not-allowed') setMicStatus('denied');
-      console.warn('STT error:', e.error);
-    }
-    // onend가 이후에 반드시 발생하므로 여기서 sttState 변경 안 함
-  };
-
-  rec.onend = () => {
-    // 항상 이 핸들러에서 상태 정리 (onerror 후에도 onend 발생)
-    sttState = 'idle';
-    rec = null; // 인스턴스 해제
-    _resetMicUI();
-
-    const txt = pendingTranscript.trim();
-    document.getElementById('live-box').style.display = 'none';
-    document.getElementById('live-txt').textContent = '';
-    pendingTranscript = '';
-
-    // ✅ onresult 즉시 호출 아닌, onend에서 한 번만 처리 (중복 방지)
-    if (txt && !isAnswering && questionCount < 20) {
-      // 마이크 종료 후 짧은 딜레이 → 크롬 STT 잔상 방지
-      setTimeout(() => handleQuestion(txt), 150);
-    }
-  };
-
-  try {
-    rec.start();
-  } catch (e) {
-    sttState = 'idle';
-    rec = null;
-    _resetMicUI();
-    console.error('STT start error:', e);
-  }
+  }, 3000);
 }
 
-function _resetMicUI() {
-  document.getElementById('mic-btn').classList.remove('rec');
-  document.getElementById('mic-txt').textContent = T('micBtnTxt');
-  document.getElementById('mic-icon').textContent = '🎙';
-}
-
-/* ════════════════════════════════════════════════════════
-   다이얼 애니메이션
-════════════════════════════════════════════════════════ */
-const DIAL = ['???','◆◆◆','▲▲▲','●●●','■■■','★★★','◇◇◇'];
-let dialTimer = null;
-
-function runDial() {
-  const track = document.getElementById('dial-track');
-  let f = 0;
-  dialTimer = setInterval(() => {
-    f++;
-    track.innerHTML = '';
-    for (let i = 0; i < 5; i++) {
-      const d = document.createElement('div');
-      d.className = 'dial-item';
-      const mid = i === 2;
-      d.style.cssText = `font-size:${mid?'30px':'18px'};color:${mid?'var(--blue)':'var(--navy)'};opacity:${mid?1:0.2+i*0.08};letter-spacing:6px;`;
-      d.textContent = DIAL[(f + i) % DIAL.length];
-      track.appendChild(d);
-    }
-  }, 80);
-}
-
-/* ════════════════════════════════════════════════════════
-   카운터
-════════════════════════════════════════════════════════ */
-function updateCounter() {
-  const p = questionCount / 20;
-  const col = p < .5 ? 'var(--green)' : p < .75 ? 'var(--orange)' : 'var(--red)';
-  document.getElementById('counter-num').innerHTML =
-    `${questionCount}<span style="font-size:12px;color:var(--gray);font-weight:700">/20</span>`;
-  document.getElementById('counter-num').style.color = col;
-}
-
-/* ════════════════════════════════════════════════════════
-   게임 흐름
-════════════════════════════════════════════════════════ */
-async function startGame() {
-  showScreen('s-dial');
-  document.getElementById('t-dial-lbl').textContent = T('dialLbl');
-  runDial();
-
-  await sleep(3200);
-  clearInterval(dialTimer);
-
-  // 생각 화면
-  showScreen('s-think');
-  document.getElementById('t-think').textContent = T('thinkTxt');
-  document.getElementById('t-think-sub').textContent = T('thinkSub');
-  const dotsEl = document.getElementById('dots');
-  let d = 0;
-  const dotsTimer = setInterval(() => { d=(d+1)%4; dotsEl.textContent='.'.repeat(d+1); }, 400);
-
-  // 단어 가져오기
-  try {
-    const data = await callAPI('/api/get-word', { lang });
-    secretWord = data.word; secretCategory = data.category;
-  } catch (e) {
-    clearInterval(dotsTimer);
-    alert('단어 생성 실패: ' + e.message);
-    showScreen('s-start'); return;
-  }
-
-  clearInterval(dotsTimer);
-
-  // 완료 화면
-  document.getElementById('think-inner').innerHTML = `
-    <div style="font-size:72px;margin-bottom:12px">✅</div>
-    <h2 style="font-size:26px;font-weight:900;color:var(--navy)">${T('wordReady')}</h2>
-    <p style="color:var(--green);font-weight:700;font-size:16px;margin-top:8px">${T('wordReadySub')}</p>`;
-  tts('Word ready! Start asking your questions!', 1.0);
-
-  await sleep(2500);
-  showScreen('s-play');
-  applyPlayTexts();
-  updateCounter();
-  await diagnoseMic();
-}
-
-/* ════════════════════════════════════════════════════════
-   질문 처리
-   ✅ isAnswering으로 동시 다중 호출 방지
-   ✅ 오류 시 questionCount 롤백하지 않고 재시도 UI 제공
-════════════════════════════════════════════════════════ */
 async function handleQuestion(question) {
-  if (!question.trim() || isAnswering || questionCount >= 20) return;
-
-  isAnswering = true;
-  // UI 잠금
-  setInputLock(true);
-
-  questionCount++;
-  updateCounter();
-
-  const id = Date.now();
+  if (isAnswering || questionCount >= 20) return;
+  isAnswering = true; questionCount++;
+  document.getElementById('counter').textContent = `${questionCount}/20`;
+  
   const idx = qaHistory.length;
-  qaHistory.push({ q: question, a: null, err: false, id });
+  qaHistory.push({ q: question, a: null, err: false });
   renderQA();
-  showQAPanel(true);
+  document.getElementById('analyzing-bar').style.display = 'block';
 
-  document.getElementById('ai-bar').style.display = 'block';
+  // AI에게 이전 문맥을 전달하기 위해 에러가 없는 기록만 필터링
+  const validHistory = qaHistory.filter(h => !h.err && h.a).map(h => ({ q: h.q, a: h.a }));
 
   try {
-    const data = await callAPI('/api/ask', { secretWord, secretCategory, question });
+    const res = await fetch(`${API_BASE_URL}/ask`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ 
+        secretWord, 
+        secretCategory, 
+        question,
+        history: validHistory 
+      })
+    });
+
+    if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `서버 에러 (${res.status})`);
+    }
+
+    const data = await res.json();
     qaHistory[idx].a = data.answer;
-    qaHistory[idx].err = false;
-    renderQA();
-
-    // ✅ 답변 나온 후 TTS 자동 실행
-    setTimeout(() => { ttsPlayingIdx = idx; ttsActive = true; updateSpeakBar(true); tts(data.answer); }, 150);
-
-    // 게임 종료 판정
+    
     if (data.type === 'guess' && data.correct) {
-      await sleep(600);
-      tts('Correct! Congratulations! You guessed it!');
-      await sleep(300);
-      applyEndTexts(true);
-      showScreen('s-win');
-      return;
+      setTimeout(() => alert(`정답입니다! 🎉 정답은 [ ${secretWord} ] 였습니다!`), 500);
     }
   } catch (e) {
-    // 오류 시: 질문 카운트 롤백 + 재시도 버튼 표시
-    questionCount--;
-    updateCounter();
-    qaHistory[idx].a = '⚠️ ' + e.message;
+    qaHistory[idx].a = `⚠️ 오류: ${e.message}`;
     qaHistory[idx].err = true;
-    qaHistory[idx].retry = question; // 재시도용 질문 저장
-    renderQA();
+    questionCount--; 
   } finally {
-    document.getElementById('ai-bar').style.display = 'none';
     isAnswering = false;
-    setInputLock(false);
-  }
-
-  if (questionCount >= 20) {
-    await sleep(1200);
-    tts(`Game over. The answer was ${secretWord}.`);
-    await sleep(300);
-    applyEndTexts(false);
-    showScreen('s-lose');
+    document.getElementById('analyzing-bar').style.display = 'none';
+    renderQA();
   }
 }
 
-function retryQuestion(question) {
-  // 재시도 버튼 클릭 시 해당 항목 제거 후 재질문
-  qaHistory = qaHistory.filter(h => h.retry !== question || !h.err);
-  questionCount = Math.max(0, questionCount); // 이미 롤백됨
-  renderQA();
-  handleQuestion(question);
+function renderQA() {
+  const list = document.getElementById('qa-list');
+  list.innerHTML = qaHistory.map((item, i) => `
+    <div class="qa-pair">
+      <div class="q-bubble">Q${i+1}. ${item.q}</div><br>
+      ${item.a ? `<div class="a-row"><div class="a-bubble ${item.err ? 'error' : ''}">${item.a}</div></div>` : ''}
+    </div>
+  `).join('');
+  list.scrollTop = list.scrollHeight;
 }
 
 function sendText() {
-  const inp = document.getElementById('txt-inp');
-  const val = inp.value.trim();
-  if (!val) return;
-  inp.value = '';
-  handleQuestion(val);
+  const input = document.getElementById('text-input');
+  if(!input.value.trim()) return;
+  handleQuestion(input.value);
+  input.value = '';
 }
 
-/* ════════════════════════════════════════════════════════
-   QA 렌더
-════════════════════════════════════════════════════════ */
-function renderQA() {
-  const list = document.getElementById('qa-list');
-  list.innerHTML = '';
-  qaHistory.forEach((item, i) => {
-    const pair = document.createElement('div');
-    pair.className = 'qa-pair';
-
-    // Q 버블
-    const qb = document.createElement('div');
-    qb.className = 'q-bub';
-    qb.innerHTML = `<span class="q-badge">Q${i+1}</span><span class="q-txt">${esc(item.q)}</span>`;
-    pair.appendChild(qb);
-
-    if (item.a != null) {
-      if (item.err) {
-        const aErr = document.createElement('div');
-        aErr.className = 'a-bub err';
-        aErr.style.marginLeft = '14px';
-        aErr.textContent = item.a;
-        pair.appendChild(aErr);
-        if (item.retry) {
-          const rb = document.createElement('button');
-          rb.className = 'retry-btn';
-          rb.textContent = T('retryBtn');
-          const q = item.retry;
-          rb.onclick = () => retryQuestion(q);
-          pair.appendChild(rb);
-        }
-      } else {
-        const arow = document.createElement('div');
-        arow.className = 'a-row';
-        const ab = document.createElement('div');
-        ab.className = 'a-bub ok';
-        ab.textContent = item.a;
-        const rpBtn = document.createElement('button');
-        rpBtn.className = 'replay-btn' + (ttsActive && ttsPlayingIdx === i ? ' on' : '');
-        rpBtn.textContent = (ttsActive && ttsPlayingIdx === i) ? '⏹' : '🔊';
-        rpBtn.title = lang === 'ko' ? '다시 듣기' : 'Replay';
-        const ans = item.a, idx2 = i;
-        rpBtn.onclick = () => playAnswer(ans, idx2);
-        arow.appendChild(ab);
-        arow.appendChild(rpBtn);
-        pair.appendChild(arow);
-      }
-    } else {
-      const al = document.createElement('div');
-      al.className = 'a-loading';
-      al.textContent = '⏳ ' + T('aiBartxt');
-      pair.appendChild(al);
-    }
-    list.appendChild(pair);
-  });
-
-  list.scrollTop = list.scrollHeight;
-  document.getElementById('qa-title').textContent = `${T('qaTitle')} (${qaHistory.length})`;
+function toggleMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return alert("지원하지 않는 브라우저입니다.");
+  const recognition = new SR();
+  recognition.lang = lang === 'ko' ? 'ko-KR' : 'en-US';
+  recognition.onstart = () => document.getElementById('mic-btn').textContent = "🔴 듣고 있어요...";
+  recognition.onresult = (e) => handleQuestion(e.results[0][0].transcript);
+  recognition.onend = () => document.getElementById('mic-btn').textContent = "🎙 질문하기 (음성)";
+  recognition.start();
 }
-
-/* ════════════════════════════════════════════════════════
-   UI 헬퍼
-════════════════════════════════════════════════════════ */
-function setInputLock(locked) {
-  document.getElementById('txt-inp').disabled = locked;
-  document.getElementById('send-btn').disabled = locked;
-  if (locked && sttState === 'listening') {
-    sttState = 'stopping';
-    try { rec && rec.stop(); } catch(e) {}
-  }
-}
-
-function showQAPanel(show) {
-  document.getElementById('qa-panel').style.display = qaHistory.length > 0 ? 'block' : 'none';
-}
-
-function toggleQA() {
-  showQA = !showQA;
-  document.getElementById('qa-list').style.display = showQA ? 'block' : 'none';
-  document.getElementById('qa-icon').textContent = showQA ? '▲' : '▼';
-}
-
-function toggleReveal() {
-  showReveal = !showReveal;
-  const box = document.getElementById('ans-reveal');
-  box.style.display = showReveal ? 'flex' : 'none';
-  if (showReveal) document.getElementById('ans-word').textContent = secretWord;
-}
-
-function endGame() { resetGame(); }
-
-function resetGame() {
-  stopTTS();
-  if (rec) { try { rec.abort(); } catch(e) {} rec = null; }
-  sttState = 'idle';
-  clearInterval(dialTimer);
-  secretWord = ''; secretCategory = '';
-  questionCount = 0; qaHistory = [];
-  isAnswering = false; showReveal = false; showQA = true;
-  ttsActive = false; ttsPlayingIdx = null;
-  pendingTranscript = '';
-  // UI 리셋
-  document.getElementById('think-inner').innerHTML = `
-    <div style="font-size:72px">🤔</div>
-    <h2 style="font-size:28px;font-weight:900;color:var(--navy)" id="t-think">Thinking<span id="dots">...</span></h2>
-    <p style="color:var(--gray);font-weight:600;font-size:14px" id="t-think-sub">AI is locking in the secret word</p>`;
-  document.getElementById('qa-panel').style.display = 'none';
-  document.getElementById('qa-list').innerHTML = '';
-  document.getElementById('ans-reveal').style.display = 'none';
-  document.getElementById('speak-bar').style.display = 'none';
-  document.getElementById('live-box').style.display = 'none';
-  document.getElementById('ai-bar').style.display = 'none';
-  document.getElementById('txt-inp').value = '';
-  _resetMicUI();
-  showScreen('s-start');
-  applyStartTexts();
-}
-
-/* ════════════════════════════════════════════════════════
-   API 호출 공통 함수
-════════════════════════════════════════════════════════ */
-async function callAPI(path, body) {
-  const res = await fetch(path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
-  return data;
-}
-
-/* ════════════════════════════════════════════════════════
-   유틸
-════════════════════════════════════════════════════════ */
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-const esc   = s  => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-// 페이지 언로드 시 STT 정리
-window.addEventListener('beforeunload', () => {
-  if (rec) { try { rec.abort(); } catch(e) {} }
-  speechSynthesis.cancel();
-});
 </script>
 </body>
 </html>
